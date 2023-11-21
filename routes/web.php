@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaypalController;
+use App\Http\Controllers\Paypal\BillingPlansController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,3 +27,7 @@ Route::post('/paypal/payment', [PaypalController::class, 'payment'])->name('payp
 Route::post('/paypal/payment_plan', [PaypalController::class, 'establishPaymentPlan'])->name('paypal_payment_plan');
 Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal_success');
 Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal_cancel');
+
+Route::get('/paypal/billing/plans', [BillingPlansController::class, 'show'])->name('paypal.plans.list');
+Route::get('/paypal/billing/plans/{id}/deactivate', [BillingPlansController::class, 'deactivate'])->name('paypal.plans.deactivate');
+

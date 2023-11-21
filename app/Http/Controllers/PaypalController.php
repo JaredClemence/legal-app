@@ -181,7 +181,7 @@ class PaypalController extends Controller
     public function cancel(Request $request){
       return view('paypal.cancel');
     }
-    private function getProvider($clientId, $secret){
+    protected function getProvider($clientId, $secret){
       $config = config('paypal');
       $mode = env('PAYPAL_MODE');
       $config[$mode]['client_id']=$clientId;
@@ -301,5 +301,25 @@ class PaypalController extends Controller
 
       $subscription = $provider->createSubscription($data);
       dd($subscription);
+    }
+    protected function getClientAndSecret($index){
+        $client_id = null;
+        $secret = null;
+        
+        switch($index){
+            case "jaredclemence.com":
+                $client_id = env("PAYPAL_JRC_CLIENTID");
+                $secret = env("PAYPAL_JRC_SECRET");
+                break;
+        }
+        if($client_id==null){
+            throw new \Exception("0x06 No valid paypal client index provided.");
+        }
+        return [$client_id, $secret];
+    }
+    protected function getProviderForPaypalClient($clientName) {
+        list($clientId, $secret)=$this->getClientAndSecret($clientName);
+        $provider = $this->getProvider($clientId, $secret);
+        return $provider;   
     }
 }
