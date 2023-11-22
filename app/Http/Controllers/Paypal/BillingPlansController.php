@@ -14,6 +14,8 @@ use App\Http\Controllers\Paypal\Classes\PlanPaymentPreferences;
 class BillingPlansController extends PaypalController
 {
     public function showNewPlanForm(Request $request){
+        return view('paypal.plans.newplan');
+        /*
         $cycle1 = new BillingCycle();
         $cycle1->setFrequency(BillingCycle::WEEK, 4)
                 ->setTenureType(BillingCycle::TENURE_TRIAL)
@@ -45,6 +47,7 @@ DESCRIBED;
                 ->setDescription($description)
                 ->setProductId("SUBSCRIPTION_PLAN_A");
         dd(json_decode($plan.""));
+         */
     }
     public function create(Request $request){
         
