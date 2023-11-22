@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
+use App\Http\Controllers\Paypal\Classes\AuthToken;
 
 enum BillingType
 {
@@ -19,6 +20,8 @@ enum BillingIntervalUnit{
 
 class PaypalController extends Controller
 {
+    private $auths = [];
+    
     public function payment(Request $request){
       try{
         $clientId = env("PAYPAL_JRC_CLIENTID");
@@ -321,5 +324,79 @@ class PaypalController extends Controller
         list($clientId, $secret)=$this->getClientAndSecret($clientName);
         $provider = $this->getProvider($clientId, $secret);
         return $provider;   
+    }
+    
+    protected function getCurlEndpoint($endpoint, $queryString=null){
+        $mode = $this->getModeFromEnvironment();
+        $urlBase = env('PAYPAL_ENDPOINT_'.strtoupper($mode));
+        
+        $url = $urlBase . $endpoint;
+        if($queryString){
+            $url .= "?" . $queryString;
+        }
+        return $url;
+    }
+    
+    protected function getAuthorizationHeader($nickname){
+        if(!isset($this->auths[$nickname])){
+            $this->loadAuth($nickname);
+        }
+        $auth = $this->auths[$nickname];
+        $type = $auth->type;
+        $token = $auth->token;
+        return "Authorization: $type $token";
+    }
+    
+    protected function loadAuth($nickname){
+        $endpoint = "/v1/oauth2/token";
+        list( $client_id, $secret ) = $this->getCredentialsForNickname( $nickname );
+        $url = $this->getCurlEndpoint($endpoint);
+        //dd( compact('client_id','secret','url'));
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_PASSWORD, $secret );
+        curl_setopt($ch, CURLOPT_USERNAME, $client_id );
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Content-Type: application/x-www-form-urlencoded"
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true );
+        $output = json_decode(curl_exec($ch));
+        curl_close($ch);
+        
+        $type = $output->token_type;
+        $token = $output->access_token;
+        $auth = new AuthToken($type, $token);
+        $this->auths[$nickname] = $auth;
+    }
+    
+    protected function getCredentialsForNickname( $nickname ){
+        $mode = $this->getModeFromEnvironment();
+        $key = $this->getNicknameKey($nickname);
+        $clientIndex = strtoupper("PAYPAL_{$key}_{$mode}_CLIENTID");
+        $secretIndex = strtoupper("PAYPAL_{$key}_{$mode}_SECRET");
+        $client_id = env($clientIndex);
+        $secret = env($secretIndex);
+        return [$client_id, $secret];
+    }
+    
+    private function getModeFromEnvironment(){
+        $mode = env('PAYPAL_MODE', 'sandbox');
+        return $mode;
+    }
+    
+    private function getNicknameKey($nickname){
+        $key = "";
+        switch($nickname){
+            case 'jared':
+                $key = "JRC";
+                break;
+            default:
+                throw new \Exception("Invalid client nickname for paypal client.");
+        }
+        return $key;
     }
 }

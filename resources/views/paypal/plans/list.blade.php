@@ -36,4 +36,7 @@
     </tr>
     @endif
 </table>
+<div>
+<a href="{{route('paypal.plans.new', compact('apiNickname'))}}">Create New Plan</a>
+</div>
 @endsection

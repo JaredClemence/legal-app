@@ -38,10 +38,11 @@ class BillingCycle extends ApiBaseClass {
     }
     public function setFixedPricePerCycle($price, $currency="USD"){
         $this->validateStringLength($price, 32);
+        $formatedPrice = $this->padCents($price);
         $this->pricing_scheme=(object)[
             "fixed_price"=>(object)[
                 "currency_code"=>$currency,
-                "value"=>$price
+                "value"=>$formatedPrice
             ]
         ];
         return $this;

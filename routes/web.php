@@ -28,7 +28,8 @@ Route::post('/paypal/payment_plan', [PaypalController::class, 'establishPaymentP
 Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal_success');
 Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal_cancel');
 
-Route::get('/paypal/billing/plans', [BillingPlansController::class, 'show'])->name('paypal.plans.list');
-Route::get('/paypal/billing/plans/new', [BillingPlansController::class, 'showNewPlanForm'])->name('paypal.plans.new');
-Route::get('/paypal/billing/plans/{id}/deactivate', [BillingPlansController::class, 'deactivate'])->name('paypal.plans.deactivate');
+Route::get('/paypal/{apiNickname}/billing/plans', [BillingPlansController::class, 'show'])->name('paypal.plans.list');
+Route::get('/paypal/{apiNickname}/billing/plans/new', [BillingPlansController::class, 'showNewPlanForm'])->name('paypal.plans.new');
+Route::get('/paypal/{apiNickname}/billing/plans/{id}/deactivate', [BillingPlansController::class, 'deactivate'])->name('paypal.plans.deactivate');
+Route::post('/paypal/{apiNickname}/billing/plans/new', [BillingPlansController::class, 'create']);
 

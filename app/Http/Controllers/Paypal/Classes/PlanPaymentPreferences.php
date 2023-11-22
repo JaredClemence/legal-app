@@ -37,9 +37,10 @@ class PlanPaymentPreferences extends ApiBaseClass {
     
     public function setSetupFee( $fee, $currency="USD"){
         $this->validateStringLength($fee, 32, 1);
+        $formatedFee = $this->padCents($fee);
         $this->setup_fee = (object)[
-            "currency"=>$currency,
-            "value"=>$fee
+            "currency_code"=>$currency,
+            "value"=>$formatedFee
         ];
         return $this;
     }

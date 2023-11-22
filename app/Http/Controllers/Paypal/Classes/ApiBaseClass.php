@@ -41,4 +41,17 @@ abstract class ApiBaseClass extends \stdClass {
     public function __toString() {
         return json_encode($this);
     }
+    
+    protected function padCents($valueString, $decimals=2){
+        $parts = explode(".", $valueString);
+        if( count($parts)==1 ){
+            $parts[1] = "00";
+        }else{
+            while( strlen($parts[1]) < 2 ){
+                $parts[1] .= "0";
+            }
+        }
+        $newValueString = implode(".", $parts);
+        return $newValueString;
+    }
 }

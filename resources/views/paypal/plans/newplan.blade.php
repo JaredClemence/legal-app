@@ -3,7 +3,7 @@
 @section('body')
 
 <h1>Create Plan Form</h1>
-<form action='' method='POST'>
+<form action='{{route('paypal.plans.new',["apiNickname"=>$apiNickname])}}' method='POST'>
     @csrf
     @include('bootstrap.form.control', 
     [ 'label_text'=>"Plan Id", 'id'=>"plan_id", 'name'=>"plan_id" ])
