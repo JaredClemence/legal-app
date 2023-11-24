@@ -6,18 +6,6 @@ use Illuminate\Http\Request;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 use App\Http\Controllers\Paypal\Classes\AuthToken;
 
-enum BillingType
-{
-    case TRIAL;
-    case REGULAR;
-}
-enum BillingIntervalUnit{
-    case DAY;
-    case WEEK;
-    case YEAR;
-    case MONTH;
-}
-
 class PaypalController extends Controller
 {
     private $auths = [];

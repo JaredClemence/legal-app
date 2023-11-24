@@ -18,13 +18,13 @@ class BillingPlansController extends PaypalController
     }
     public function create(Request $request, $apiNickname){
         $billingCycle = $this->buildPaymentPlan($request);
-        $jsonString = json_encode($billingCycle);
         $endpoint = "/v1/billing/plans";
-        $authorizationHeader = $this->getAuthorizationHeader($apiNickname);
         $url = $this->getCurlEndpoint($endpoint);
-        
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url );
+        
+        $jsonString = json_encode($billingCycle);
+        $authorizationHeader = $this->getAuthorizationHeader($apiNickname);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             $authorizationHeader,
@@ -51,7 +51,12 @@ class BillingPlansController extends PaypalController
         }catch(\Exception $e){}
         return redirect(route('paypal.plans.list'));
     }
-    
+    /**
+     * 
+     * @param type $nickname
+     * @param type $id
+     * @todo Modify to remove product id. This should point to the plan id.
+     */
     protected function activateById($nickname, $id ){
         $endpoint = "/v1/billing/plans/{$id}/activate";
         
