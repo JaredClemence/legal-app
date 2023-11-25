@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\PaypalController;
 use App\Http\Controllers\Paypal\Classes\Curl;
 use App\Http\Controllers\Paypal\Factories\ProductFactory;
+use App\Http\Controllers\Paypal\Classes\Product;
 
 class ProductController extends PaypalController
 {
@@ -28,7 +29,11 @@ class ProductController extends PaypalController
      */
     public function create(Request $request, $apiNickname)
     {
-        //
+        $typeOptions = Product::$typeChoices;
+        $categoryOptions = Product::$categoryOptions;
+        array_unshift($typeOptions, "NONE");
+        array_unshift($categoryOptions, "NONE");
+        return view('paypal.products.create', compact('apiNickname','typeOptions','categoryOptions'));
     }
 
     /**
@@ -36,7 +41,14 @@ class ProductController extends PaypalController
      */
     public function store(Request $request, $apiNickname)
     {
-        //
+        $product = new Product();
+        $product->setId($request->product_id);
+        $product->setType($request->product_type);
+        $product->setName($request->product_name);
+        $product->setDescription($request->product_description);
+        $product->setCategory($request->product_category);
+        $this->createProduct($apiNickname, $product);
+        return redirect( route('paypal.product.list', compact('apiNickname') ) );
     }
 
     /**
@@ -82,6 +94,23 @@ class ProductController extends PaypalController
                 ->addHeader("Accept: application/json")
                 ->addHeader("Prefer: return=representation")
                 ->commitHeader()
+                ->exec();
+        $jsonResult = $curl->getJson();
+        return $jsonResult;
+    }
+    
+    public function createProduct($nickname, Product $product) {
+        $authString = $this->getAuthorizationHeader($nickname);
+        $endpoint = "/v1/catalogs/products";
+        
+        $curl = new Curl();
+        $curl->setUrlByShortpath($endpoint)
+                ->addHeader($authString)
+                ->addHeader("Content-Type: application/json")
+                ->addHeader("Accept: application/json")
+                ->addHeader("Prefer: return=representation")
+                ->commitHeader()
+                ->setPost(json_encode($product))
                 ->exec();
         $jsonResult = $curl->getJson();
         return $jsonResult;

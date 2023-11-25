@@ -1,5 +1,5 @@
 @extends('layouts.basic')
-@yield('title','Payment Plan - Create New')
+@section('title','Payment Plan - Create New')
 @section('body')
 
 <h1>Create Plan Form</h1>

@@ -25,10 +25,10 @@ Route::get('/test/fixed', function () {
 Route::get('/test/subscription', [PaypalController::class, 'establishPaymentPlan']);
 
 Route::prefix('paypal')->group(function(){
-Route::post('/paypal/payment', [PaypalController::class, 'payment'])->name('paypal_fixed_payment');
-Route::post('/paypal/payment_plan', [PaypalController::class, 'establishPaymentPlan'])->name('paypal_payment_plan');
-Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal_success');
-Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal_cancel');
+    Route::post('/paypal/payment', [PaypalController::class, 'payment'])->name('paypal_fixed_payment');
+    Route::post('/paypal/payment_plan', [PaypalController::class, 'establishPaymentPlan'])->name('paypal_payment_plan');
+    Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal_success');
+    Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal_cancel');
 
     Route::prefix('{apiNickname}')->group( function(){
         
@@ -41,10 +41,11 @@ Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal_
              */
             
             Route::get('/product', [ProductController::class, 'index'])->name('paypal.product.list');
-            Route::get('/product/{id}', [ProductController::class, 'show'])->name('paypal.product.detail');
             Route::get('/product/new', [ProductController::class, 'create'])->name('paypal.product.new');
-            Route::get('/product/{id}/deactivate', [ProductController::class, 'deactivate'])->name('paypal.product.deactivate');
             Route::post('/product/new', [ProductController::class, 'store']);
+            Route::get('/product/{id}', [ProductController::class, 'show'])->name('paypal.product.detail');
+            Route::get('/product/{id}/deactivate', [ProductController::class, 'deactivate'])->name('paypal.product.deactivate');
+            
     });
 
 });

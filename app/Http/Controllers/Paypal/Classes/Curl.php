@@ -49,7 +49,7 @@ class Curl {
     
     public function setPost( $dataString ){
         curl_setopt($this->handle, CURLOPT_POST, true);
-        curl_setopt($this->handle, CURLOPT_POSTFIELDS, $jsonString);
+        curl_setopt($this->handle, CURLOPT_POSTFIELDS, $dataString);
         return $this;
     }
     
