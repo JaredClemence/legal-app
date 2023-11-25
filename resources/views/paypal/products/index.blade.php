@@ -17,6 +17,7 @@
         <th>Description</th>
         <th>Category</th>
         <th>Type</th>
+        <th>Links</th>
     </tr>
     @foreach($products as $product)
     <tr>
