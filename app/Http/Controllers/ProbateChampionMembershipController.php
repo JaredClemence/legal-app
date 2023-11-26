@@ -25,7 +25,7 @@ class ProbateChampionMembershipController extends Controller
         $unencryptedQueryDataArray = $request->all();
         $unencryptedQueryDataString = serialize($unencryptedQueryDataArray);
         $viewData = [
-            "products"=>[],
+            "products"=>$this->getAllProducts(),
             "payment_type"=>$request->payment_type,
             "encryptedSerializedData"=>$this->encrypt($unencryptedQueryDataString)
         ];
@@ -142,6 +142,16 @@ class ProbateChampionMembershipController extends Controller
         $data = (object) unserialize($rawDataString);
         return $data;
         
+    }
+    
+    private function getAllProducts(){
+        $provider = new ProductServiceProvider('jared');
+        $paypalResponse = $provider->all();
+        $jsonCollection = collect($paypalResponse->products);
+        $productCollection = $jsonCollection->map( function ($productJson) {
+            return ProductFactory::make($productJson);
+        });
+        return $productCollection;
     }
 
     private function getProductById($id) {
