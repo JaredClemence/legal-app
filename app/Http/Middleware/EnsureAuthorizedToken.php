@@ -15,9 +15,11 @@ class EnsureAuthorizedToken
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $token = isset( $request->token ) ? $request->token : false;
-        if( $token != env("SECURE_TOKEN")){
-            abort(403, 'Unauthorized.');
+        if(!$request->isMethod('post')){
+            $token = isset( $request->token ) ? $request->token : false;
+            if( $token != env("SECURE_TOKEN")){
+                abort(403, 'Unauthorized.');
+            }
         }
         return $next($request);
     }

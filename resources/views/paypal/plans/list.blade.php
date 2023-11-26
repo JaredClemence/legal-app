@@ -24,7 +24,7 @@
                 <td>{{$plan->status}}</td>
                 <td>{{$plan->name}}</td>
                 <td>{{$plan->description}}</td>
-                <td><a href="{{route('paypal.plans.deactivate', ["id"=>$plan->id])}}">Deactivate</a></td>
+                <td><a href="{{route('paypal.plans.deactivate', ['apiNickname'=>$apiNickname, 'token'=>env("SECURE_TOKEN"), "id"=>$plan->id])}}">Deactivate</a></td>
             </tr>
             @endif
         @endforeach

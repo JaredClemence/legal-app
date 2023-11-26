@@ -5,6 +5,7 @@ use App\Http\Controllers\PaypalController;
 use App\Http\Controllers\Paypal\BillingPlansController;
 use App\Http\Controllers\Paypal\ProductController;
 use App\Http\Middleware\EnsureAuthorizedToken;
+use App\Http\Controllers\ProbateChampionMembershipController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,10 @@ Route::get('/test/fixed', function () {
     return view('testPaypal');
 });
 Route::get('/test/subscription', [PaypalController::class, 'establishPaymentPlan']);
+
+Route::get('/probatechampions/new', [ProbateChampionMembershipController::class,'create'])->name('champions.new.links');
+Route::get('/probatechampions/fixed', [ProbateChampionMembershipController::class,'createFixed'])->name('champions.new.single');
+Route::get('/probatechampions/subscribe', [ProbateChampionMembershipController::class,'createSubscription'])->name('champions.new.subscription');
 
 Route::prefix('paypal')->group(function(){
     Route::post('/paypal/payment', [PaypalController::class, 'payment'])->name('paypal_fixed_payment');

@@ -30,7 +30,7 @@
     @endforeach
 </table>
     <div style="padding:20px;">
-        <form action="{{route('paypal.product.new',compact('apiNickname'))}}" method="GET">
+        <form action="{{route('paypal.product.new',['apiNickname'=>$apiNickname, 'token'=>env("SECURE_TOKEN")])}}" method="GET">
             @csrf
             <button type="submit">Create New</a>
         </form>

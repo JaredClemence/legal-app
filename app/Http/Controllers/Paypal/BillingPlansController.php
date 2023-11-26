@@ -38,7 +38,8 @@ class BillingPlansController extends PaypalController
         $output = json_decode(curl_exec($ch));
         curl_close($ch);
         dd($output);
-        return redirect(route('paypal.plans.list', compact('apiNickname')));
+        $token = $request->token;
+        return redirect(route('paypal.plans.list', compact('apiNickname','token')));
     }
     public function show(Request $request, $apiNickname){
         $this->activateById($apiNickname, "99MO_4FREE_10SU_6MO");

@@ -14,6 +14,14 @@ use App\Http\Controllers\Paypal\Classes\ApiBaseClass;
  * Description of Product
  *
  * @author jaredclemence
+ * @var string id
+ * @var string name
+ * @var string description
+ * @var string type
+ * @var string category
+ * @var Payee payee
+ * @var string create_time
+ * @var string update_time
  */
 class Product extends ApiBaseClass {
     static public $categoryOptions = [

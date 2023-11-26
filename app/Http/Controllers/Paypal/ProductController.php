@@ -7,6 +7,7 @@ use App\Http\Controllers\PaypalController;
 use App\Http\Controllers\Paypal\Classes\Curl;
 use App\Http\Controllers\Paypal\Factories\ProductFactory;
 use App\Http\Controllers\Paypal\Classes\Product;
+use App\Providers\Service\ProductServiceProvider;
 
 class ProductController extends PaypalController
 {
@@ -15,7 +16,8 @@ class ProductController extends PaypalController
      */
     public function index(Request $request, $apiNickname)
     {
-        $result = $this->getAll($apiNickname);
+        $provider = new ProductServiceProvider($apiNickname);
+        $result = $provider->all();
         $products = [];
         foreach($result->products as $productJson){
             $product = ProductFactory::make($productJson);
@@ -48,7 +50,8 @@ class ProductController extends PaypalController
         $product->setDescription($request->product_description);
         $product->setCategory($request->product_category);
         $this->createProduct($apiNickname, $product);
-        return redirect( route('paypal.product.list', compact('apiNickname') ) );
+        $token = $request->token;
+        return redirect( route('paypal.product.list', compact('apiNickname','token') ) );
     }
 
     /**
@@ -83,36 +86,9 @@ class ProductController extends PaypalController
         //
     }
     
-    protected function getAll($nickname){
-        $authString = $this->getAuthorizationHeader($nickname);
-        $endpoint = "/v1/catalogs/products";
-        
-        $curl = new Curl();
-        $curl->setUrlByShortpath($endpoint)
-                ->addHeader($authString)
-                ->addHeader("Content-Type: application/json")
-                ->addHeader("Accept: application/json")
-                ->addHeader("Prefer: return=representation")
-                ->commitHeader()
-                ->exec();
-        $jsonResult = $curl->getJson();
-        return $jsonResult;
-    }
-    
     public function createProduct($nickname, Product $product) {
-        $authString = $this->getAuthorizationHeader($nickname);
-        $endpoint = "/v1/catalogs/products";
-        
-        $curl = new Curl();
-        $curl->setUrlByShortpath($endpoint)
-                ->addHeader($authString)
-                ->addHeader("Content-Type: application/json")
-                ->addHeader("Accept: application/json")
-                ->addHeader("Prefer: return=representation")
-                ->commitHeader()
-                ->setPost(json_encode($product))
-                ->exec();
-        $jsonResult = $curl->getJson();
+        $provider = new ProductServiceProvider($nickname);
+        $jsonResult = $provider->save($product);
         return $jsonResult;
     }
 }

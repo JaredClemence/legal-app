@@ -3,8 +3,9 @@
 @section('body')
 
 <h1>Create Product Form</h1>
-<form action='{{route('paypal.product.new',["apiNickname"=>$apiNickname])}}' method='POST'>
+<form action='{{route('paypal.product.new',['apiNickname'=>$apiNickname, 'token'=>env("SECURE_TOKEN")])}}' method='POST'>
     @csrf
+    <input type="hidden" name="token" value="{{env("SECURE_TOKEN")}}"/>
     @include('bootstrap.form.control', 
     [ 'label_text'=>"Product Id", 'id'=>"product_id", 'name'=>"product_id" ])
     

@@ -19,16 +19,21 @@ class ProductFactory {
     public static function make( $json ) : Product 
     {
         $json = (object)$json;
-        $payeeJson = (object)$json->payee;
         $product = new Product();
         $product->setId($json->id);
-        $product->setPayeeByAttr($payeeJson->merchant_id, $payeeJson->display_data);
         $product->setName($json->name);
         $product->setDescription($json->description);
         $product->setType($json->type);
         $product->setCategory($json->category);
         $product->setCreateTime($json->create_time);
         $product->setUpdateTime($json->update_time);
+        
+        
+        if(isset($json->payee)){
+            $payeeJson = (object)$json->payee;
+            $product->setPayeeByAttr($payeeJson->merchant_id, $payeeJson->display_data);
+        }
+        
         return $product;
     }
 }
