@@ -10,6 +10,7 @@ use App\Http\Controllers\Paypal\Classes\Order;
 use App\Http\Controllers\Paypal\Classes\CommonDataStructures\PurchaseUnit;
 use App\Http\Controllers\Paypal\Classes\CommonDataStructures\Item;
 use App\Providers\Service\OrderServiceProvider;
+use App\Http\Controllers\Paypal\Classes\CommonDataStructures\ExperienceContext;
 
 class ProbateChampionMembershipController extends Controller
 {
@@ -67,7 +68,9 @@ class ProbateChampionMembershipController extends Controller
         $cancel_url = $decryptedQueryData->cancel_url;
         
         $context = $order->getEmptyPaypalExperienceContext();
-        $context->setBrandName("Jared R. Clemence's Probate Champion's Program");
+        $context->setBrandName("Jared R. Clemence's Probate Champion's Program")
+            ->setPaymentMethodPreference(ExperienceContext::PAY_PREFERENCE_IMMEDIATE_PAYMENT_REQUIRED)
+                ->setUserAction(ExperienceContext::USER_ACTION_PAY_NOW);
         $context->setReturnUrl($return_url);
         $context->setCancelUrl($cancel_url);
         
