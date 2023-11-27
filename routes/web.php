@@ -19,7 +19,7 @@ use App\Http\Controllers\ProbateChampionMembershipController;
 */
 
 Route::get('/', function () {
-    return redirect(route('paypal.product.list',['apiNickname'=>'jared']));
+    return view('welcome');
 });
 Route::get('/test/fixed', function () {
     return view('testPaypal');
