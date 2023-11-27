@@ -79,6 +79,20 @@
         'name'=>'free_periods',
         'type'=>'number'
     ])
+    @include('bootstrap.form.control',
+    [
+        'label_text'=>'Success Url',
+        'id'=>'return_url',
+        'name'=>'return_url',
+        'type'=>'text'
+    ])
+    @include('bootstrap.form.control',
+    [
+        'label_text'=>'Cancel Url',
+        'id'=>'cancel_url',
+        'name'=>'cancel_url',
+        'type'=>'text'
+    ])
     <button type="submit">Submit</button>
 </form>
 @if( isset( $payment_type ) )

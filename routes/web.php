@@ -26,8 +26,14 @@ Route::get('/test/fixed', function () {
 });
 Route::get('/test/subscription', [PaypalController::class, 'establishPaymentPlan']);
 
+Route::get('/probatechampions/success', function(Request $request){
+    dd(["type"=>"success", "request"=>$request]);
+})->name('champions.links.success');
+Route::get('/probatechampions/cancel', function(Request $request){
+    dd(["type"=>"cancel", "request"=>$request]);
+})->name('champions.links.cancel');
 Route::get('/probatechampions/new', [ProbateChampionMembershipController::class,'create'])->name('champions.new.links');
-Route::get('/probatechampions/fixed', [ProbateChampionMembershipController::class,'createFixed'])->name('champions.new.single');
+Route::get('/probatechampions/fixed', [ProbateChampionMembershipController::class,'sendFixedPriceClientToPaypal'])->name('champions.new.single');
 Route::get('/probatechampions/subscribe', [ProbateChampionMembershipController::class,'createSubscription'])->name('champions.new.subscription');
 
 Route::prefix('paypal')->group(function(){

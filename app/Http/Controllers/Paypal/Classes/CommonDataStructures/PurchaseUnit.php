@@ -49,9 +49,24 @@ class PurchaseUnit extends ApiBaseClass {
         $this->soft_descriptor = $text;
         return $this;
     }
-    public function setAmount($amount, $currency){
-        $formattedAmount = $this->padCents($amount);
-        $this->amount = Value::makeValue($amount, $currency);
+    public function setAmount($value, $currency="USD", $itemTotal=null, 
+            $shipping=null, $handlingTotal=null, $taxTotal=null, $insuranceTotal=null,
+            $shippingDiscountTotal=null, $discountTotal=null ){
+        $this->amount = (object)[
+            "value"=>$this->padCents($value),
+            "currency_code"=>$currency
+        ];
+        $breakdown = [];
+        if($itemTotal) $breakdown["item_total"]=Value::makeValue($itemTotal, $currency);
+        if($shipping) $breakdown["shipping"]=Value::makeValue($shipping, $currency);
+        if($handlingTotal) $breakdown["handling"]=Value::makeValue($handlingTotal, $currency);
+        if($taxTotal) $breakdown["tax_total"]=Value::makeValue($taxTotal, $currency);
+        if($insuranceTotal) $breakdown["insurance"]=Value::makeValue($insuranceTotal, $currency);
+        if($shippingDiscountTotal) $breakdown["shipping_discount"]=Value::makeValue($shippingDiscountTotal, $currency);
+        if($discountTotal) $breakdown["discount"]=Value::makeValue($discountTotal, $currency);
+        if(count($breakdown)>0){
+            $this->amount->breakdown = (object)$breakdown;
+        }
         return $this;
     }
     public function addItem(Item $item){

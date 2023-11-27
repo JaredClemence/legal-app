@@ -23,7 +23,7 @@ class Value extends ApiBaseClass{
     public function setAmount($amount){
         $formattedAmount = $this->padCents($amount);
         $this->validateStringLength($formattedAmount, 32);
-        $this->amount = $amount;
+        $this->value = $amount;
         return $this;
     }
     public function setCurrency($type){

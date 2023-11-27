@@ -11,6 +11,7 @@ namespace App\Http\Controllers\Paypal\Classes;
 use App\Http\Controllers\Paypal\Classes\ApiBaseClass;
 use App\Http\Controllers\Paypal\Classes\CommonDataStructures\PurchaseUnit;
 use App\Http\Controllers\Paypal\Classes\CommonDataStructures\Value;
+use App\Http\Controllers\Paypal\Classes\CommonDataStructures\ExperienceContext;
 
 /**
  * Description of Order
@@ -42,24 +43,17 @@ class Order extends ApiBaseClass {
         $this->intent = $intent;
         return $this;
     }
-    public function setAmount($value, $currency="USD", $itemTotal=null, 
-            $shipping=null, $handlingTotal=null, $taxTotal=null, $insuranceTotal=null,
-            $shippingDiscountTotal=null, $discountTotal=null ){
-        $this->amount = (object)[
-            "value"=>$this->padCents($value),
-            "currency_code"=>$currency
-        ];
-        $breakdown = [];
-        if($itemTotal) $breakdown["item_total"]=Value::makeValue($itemTotal, $currency);
-        if($shipping) $breakdown["shipping"]=Value::makeValue($shipping, $currency);
-        if($handlingTotal) $breakdown["handling"]=Value::makeValue($handlingTotal, $currency);
-        if($taxTotal) $breakdown["tax_total"]=Value::makeValue($taxTotal, $currency);
-        if($insuranceTotal) $breakdown["insurance"]=Value::makeValue($insuranceTotal, $currency);
-        if($shippingDiscountTotal) $breakdown["shipping_discount"]=Value::makeValue($shippingDiscountTotal, $currency);
-        if($discountTotal) $breakdown["discount"]=Value::makeValue($discountTotal, $currency);
-        if(count($breakdown)>0){
-            $this->amount->breakdown = (object)$breakdown;
-        }
-        return $this;
+    
+    /**
+     * @return ExperienceContext $context
+     */
+    public function getEmptyPaypalExperienceContext(): ExperienceContext{
+        $context = new ExperienceContext();
+        $paypal = new \stdClass();
+        $source = new \stdClass();
+        $source->paypal = $paypal;
+        $paypal->experience_context = $context;
+        $this->payment_source = $source;
+        return $context;
     }
 }

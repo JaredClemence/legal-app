@@ -16,7 +16,7 @@ namespace App\Http\Controllers\Paypal\Classes;
 abstract class ApiBaseClass extends \stdClass {
     protected function validateStringLength($string, $maxLength, $minLength=0){
         $len = strlen($string);
-        if( $len >= $maxLength ){
+        if( $len > $maxLength ){
             throw new \Exception( "'$string' exceeds the maximum permitted length of $maxLength.");
         }
         if( $len < $minLength ){
