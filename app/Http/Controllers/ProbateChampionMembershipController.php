@@ -54,40 +54,20 @@ class ProbateChampionMembershipController extends Controller
     }
     
     public function sendFixedPriceClientToPaypal(Request $request){
-        $decryptedQueryData = $this->extractPhpDataFromQuery($request);
-        $amount = $decryptedQueryData->amount;
-        $product_id = $decryptedQueryData->product_id;
-        
-        $product = $this->getProductById($product_id);
-        
-        $item = $this->makeItemFromProduct($product, $amount);
-        $purchaseUnit = $this->convertItemToPurchaseUnit($item);
-        $order = $this->convertPurchaseUnitToOrder($purchaseUnit);
-        
-        $return_url = $decryptedQueryData->return_url;
-        $cancel_url = $decryptedQueryData->cancel_url;
-        
-        $context = $order->getEmptyPaypalExperienceContext();
-        $context->setBrandName("Jared R. Clemence's Probate Champion's Program")
-            ->setPaymentMethodPreference(ExperienceContext::PAY_PREFERENCE_IMMEDIATE_PAYMENT_REQUIRED)
-                ->setUserAction(ExperienceContext::USER_ACTION_PAY_NOW);
-        $context->setReturnUrl($return_url);
-        $context->setCancelUrl($cancel_url);
-        
-        $provider = new OrderServiceProvider('jared');
-        $result = $provider->save($order);
-        
-        $linksCollection = collect($result->links);
-        $approvalLinks = $linksCollection->filter(function ($link, int $key) {
-           return $link->rel=="approve" || $link->rel=="payer-action";
-        });
-        $approvalLink = $approvalLinks->pop();
-        
-        if( $approvalLink == null ) abort(500);
-        
-        $link = $approvalLink->href;
-        
+        $link = $this->makeFixedPriceAuthLink($request);
         return redirect()->away($link);
+    }
+    
+    public function getRedirectLink(Request $request){
+        $link = $this->makeFixedPriceAuthLink($request);
+        $response = response()->json([
+            'paypal_auth_link'=>$link,
+        ]);
+        if( isset($request->raw) && $request->raw==="1" ){
+            $response = $link;
+        }
+        return $response;
+        
     }
     
     /**
@@ -235,6 +215,42 @@ class ProbateChampionMembershipController extends Controller
         $order->setIntent(Order::IntentCapture);
         $order->addPurchaseUnit($purchaseUnit);
         return $order;
+    }
+    
+    private function makeFixedPriceAuthLink(Request $request){
+        $decryptedQueryData = $this->extractPhpDataFromQuery($request);
+        $amount = $decryptedQueryData->amount;
+        $product_id = $decryptedQueryData->product_id;
+        
+        $product = $this->getProductById($product_id);
+        
+        $item = $this->makeItemFromProduct($product, $amount);
+        $purchaseUnit = $this->convertItemToPurchaseUnit($item);
+        $order = $this->convertPurchaseUnitToOrder($purchaseUnit);
+        
+        $return_url = $decryptedQueryData->return_url;
+        $cancel_url = $decryptedQueryData->cancel_url;
+        
+        $context = $order->getEmptyPaypalExperienceContext();
+        $context->setBrandName("Jared R. Clemence's Probate Champion's Program")
+            ->setPaymentMethodPreference(ExperienceContext::PAY_PREFERENCE_IMMEDIATE_PAYMENT_REQUIRED)
+                ->setUserAction(ExperienceContext::USER_ACTION_PAY_NOW);
+        $context->setReturnUrl($return_url);
+        $context->setCancelUrl($cancel_url);
+        
+        $provider = new OrderServiceProvider('jared');
+        $result = $provider->save($order);
+        
+        $linksCollection = collect($result->links);
+        $approvalLinks = $linksCollection->filter(function ($link, int $key) {
+           return $link->rel=="approve" || $link->rel=="payer-action";
+        });
+        $approvalLink = $approvalLinks->pop();
+        
+        if( $approvalLink == null ) abort(500);
+        
+        $link = $approvalLink->href;
+        return $link;
     }
 
 }

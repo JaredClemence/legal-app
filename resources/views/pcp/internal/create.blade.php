@@ -100,9 +100,13 @@
     <h1>Link</h1>
     
     @if($payment_type=='SINGLE')
-    @php( $link = route('champions.new.single', ["sec_token"=>$encryptedSerializedData]))
+    @php 
+    $link = route('champions.new.single', ["sec_token"=>$encryptedSerializedData]);
+    $link2 = route('champions.order.link', ["sec_token"=>$encryptedSerializedData]);
+    @endphp
     <p>
-        Link Text: <a href="{{$link}}">{{$link}}</a>
+        Redirect Link Text: <a href="{{$link}}">{{$link}}</a><br/>
+        Paypal JSON Link: <a href="{{$link2}}">{{$link2}}</a>
     </p>
     @elseif($payment_type=='SUBSCRIPTION')
     @php( $link = route('champions.new.subscription', ["sec_token"=>$encryptedSerializedData]))
