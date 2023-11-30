@@ -11,6 +11,8 @@ namespace App\Providers\Service;
 use App\Providers\Service\BaseServiceProvider;
 use App\Http\Controllers\Paypal\Classes\Order;
 use App\Http\Controllers\Paypal\Classes\Curl;
+use stdClass;
+use App\Models\Order as OrderRecord;
 
 /**
  * Description of OrderServiceProvider
@@ -18,6 +20,9 @@ use App\Http\Controllers\Paypal\Classes\Curl;
  * @author jaredclemence
  */
 class OrderServiceProvider extends BaseServiceProvider {
+
+    const ID_KEY = "current_paypal_order_id";
+
     public function all() {
         
     }
@@ -26,7 +31,7 @@ class OrderServiceProvider extends BaseServiceProvider {
         
     }
 
-    public function save(\stdClass $order) {
+    public function save(stdClass $order) {
         $authString = $this->getAuthorizationHeader();
         $endpoint = "/v2/checkout/orders";
         
@@ -40,6 +45,21 @@ class OrderServiceProvider extends BaseServiceProvider {
                 ->setPost(json_encode($order))
                 ->exec();
         $jsonResult = $curl->getJson();
+        $this->saveLocalOrderData($order, $jsonResult);
         return $jsonResult;
+    }
+    
+    public function saveLocalOrderData(stdClass $order, stdClass $result){
+        $record = OrderRecord::firstOrNew(['paypal_id'=>$result->id]);
+        $record->paypal_id = $result->id;
+        $record->status = $result->status;
+        $record->intent = $result->intent;
+        $record->paypal_order_obj = json_encode($order);
+        $record->payment_source = json_encode($result->payment_source);
+        $record->purchase_units = json_encode($result->purchase_units);
+        $record->links = json_encode($result->links);
+        $record->save();
+        
+        Session([self::ID_KEY=>$record->id]);
     }
 }

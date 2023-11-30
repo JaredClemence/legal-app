@@ -14,6 +14,9 @@ use App\Http\Controllers\Paypal\Classes\CommonDataStructures\ExperienceContext;
 
 class ProbateChampionMembershipController extends Controller
 {
+
+    const ID_KEY = "probate_champions_order_reference";
+
     /**
      * Display a listing of the resource.
      */
