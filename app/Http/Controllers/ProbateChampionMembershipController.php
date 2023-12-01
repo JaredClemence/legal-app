@@ -40,6 +40,30 @@ class ProbateChampionMembershipController extends Controller
         return view('pcp.internal.create', $viewData);
     }
     
+    public function showFailedPaymentOptions(Request $request){
+        $decryptedQueryData = $this->extractPhpDataFromQuery($request);
+        $tryAgainLink = route('champions.new.single') . "?" . http_build_query($request->all());
+        $cancelLink = $decryptedQueryData->cancel_url;
+        return view('pcp.failed', compact('tryAgainLink','cancelLink'));
+    }
+    
+    public function collectPayment(Request $request){
+        $successUrl = $this->getEncryptedSuccessUrl( $request );
+        $redirectSuccess = redirect()->away($successUrl);
+        $redirect = $redirectSuccess;
+        $result = null;
+        try{
+            $result = $this->attemptCollection();
+        }catch( \Exception $e ){
+            $urlOnFail = route('champions.failed_payment');
+            $urlOnFail .= "?" . http_build_query($request->all());
+            $redirectFail = redirect()->away($urlOnFail);
+            $redirect = $redirectFail;
+        }
+        $this->notifyAdmin($result);
+        return $redirect;
+    }
+    
     /**
      * 
      */
@@ -70,7 +94,6 @@ class ProbateChampionMembershipController extends Controller
             $response = $link;
         }
         return $response;
-        
     }
     
     /**
@@ -231,7 +254,9 @@ class ProbateChampionMembershipController extends Controller
         $purchaseUnit = $this->convertItemToPurchaseUnit($item);
         $order = $this->convertPurchaseUnitToOrder($purchaseUnit);
         
-        $return_url = $decryptedQueryData->return_url;
+        //successful authorizatins always return to Laravel.
+        $return_url = route('champions.collect') . "?" . http_build_query($request->all());
+        //cancel commands can pass straight to the cancel page.
         $cancel_url = $decryptedQueryData->cancel_url;
         
         $context = $order->getEmptyPaypalExperienceContext();
@@ -254,6 +279,25 @@ class ProbateChampionMembershipController extends Controller
         
         $link = $approvalLink->href;
         return $link;
+    }
+
+    private function attemptCollection() {
+        $provider = new OrderServiceProvider('jared');
+        $result = $provider->captureCurrentOrder();
+        if( $result->status !== "COMPLETED" ){
+            $status = $result->status;
+            throw new \Exception("Attempted capture failed. Status returned as '$status'.");
+        }
+        return $result;
+    }
+
+    private function notifyAdmin($result) {
+        //send email about new customer.
+    }
+
+    private function getEncryptedSuccessUrl($request) {
+        $decryptedQueryData = $this->extractPhpDataFromQuery($request);
+        return $decryptedQueryData->return_url;
     }
 
 }

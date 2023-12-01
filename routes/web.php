@@ -37,6 +37,9 @@ Route::get('/probatechampions/new', [ProbateChampionMembershipController::class,
 Route::get('/probatechampions/fixed', [ProbateChampionMembershipController::class,'sendFixedPriceClientToPaypal'])->name('champions.new.single');
 Route::get('/probatechampions/subscribe', [ProbateChampionMembershipController::class,'createSubscription'])->name('champions.new.subscription');
 
+Route::get('/probatechampions/process/collect', [ProbateChampionMembershipController::class,'collectPayment'])->name('champions.collect');
+Route::get('/probatechampions/process/failed_payment', [ProbateChampionMembershipController::class,'showFailedPaymentOptions'])->name('champions.failed_payment');
+
 Route::prefix('paypal')->group(function(){
     Route::post('/paypal/payment', [PaypalController::class, 'payment'])->name('paypal_fixed_payment');
     Route::post('/paypal/payment_plan', [PaypalController::class, 'establishPaymentPlan'])->name('paypal_payment_plan');
