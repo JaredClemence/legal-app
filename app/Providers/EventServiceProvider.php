@@ -6,6 +6,11 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Events\Pcp\NewMemberPaymentCollected;
+use App\Listeners\Pcp\CreateNewPcpMember;
+use App\Events\Pcp\NewPcpMemberCreated;
+use App\Listeners\Pcp\EmailPcpContract;
+use App\Listeners\Pcp\EmailFreeConsultInvitation;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -17,6 +22,13 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
+        ],
+        NewMemberPaymentCollected::class => [
+            CreateNewPcpMember::class,
+        ],
+        NewPcpMemberCreated::class => [
+            EmailPcpContract::class,
+            EmailFreeConsultInvitation::class,
         ],
     ];
 

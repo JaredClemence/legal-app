@@ -1,11 +1,7 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaypalController;
-use App\Http\Controllers\Paypal\BillingPlansController;
-use App\Http\Controllers\Paypal\ProductController;
-use App\Http\Middleware\EnsureAuthorizedToken;
-use App\Http\Controllers\ProbateChampionMembershipController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,49 +17,15 @@ use App\Http\Controllers\ProbateChampionMembershipController;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/test/fixed', function () {
-    return view('testPaypal');
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-Route::get('/test/subscription', [PaypalController::class, 'establishPaymentPlan']);
 
-Route::get('/probatechampions/success', function(Request $request){
-    dd(["type"=>"success", "request"=>$request]);
-})->name('champions.links.success');
-Route::get('/probatechampions/cancel', function(Request $request){
-    dd(["type"=>"cancel", "request"=>$request]);
-})->name('champions.links.cancel');
-Route::get('/probatechampions/fixed/link', [ProbateChampionMembershipController::class,'getRedirectLink'])->name('champions.order.link');
-Route::get('/probatechampions/new', [ProbateChampionMembershipController::class,'create'])->name('champions.new.links');
-Route::get('/probatechampions/fixed', [ProbateChampionMembershipController::class,'sendFixedPriceClientToPaypal'])->name('champions.new.single');
-Route::get('/probatechampions/subscribe', [ProbateChampionMembershipController::class,'createSubscription'])->name('champions.new.subscription');
-
-Route::get('/probatechampions/process/collect', [ProbateChampionMembershipController::class,'collectPayment'])->name('champions.collect');
-Route::get('/probatechampions/process/failed_payment', [ProbateChampionMembershipController::class,'showFailedPaymentOptions'])->name('champions.failed_payment');
-
-Route::prefix('paypal')->group(function(){
-    Route::post('/paypal/payment', [PaypalController::class, 'payment'])->name('paypal_fixed_payment');
-    Route::post('/paypal/payment_plan', [PaypalController::class, 'establishPaymentPlan'])->name('paypal_payment_plan');
-    Route::get('/paypal/success', [PaypalController::class, 'success'])->name('paypal_success');
-    Route::get('/paypal/cancel', [PaypalController::class, 'cancel'])->name('paypal_cancel');
-
-    Route::middleware(EnsureAuthorizedToken::class)->group( function(){
-        Route::prefix('{apiNickname}')->group( function(){
-
-                Route::get('/plans', [BillingPlansController::class, 'show'])->name('paypal.plans.list');
-                Route::get('/plans/new', [BillingPlansController::class, 'showNewPlanForm'])->name('paypal.plans.new');
-                Route::get('/plans/{id}/deactivate', [BillingPlansController::class, 'deactivate'])->name('paypal.plans.deactivate');
-                Route::post('/plans/new', [BillingPlansController::class, 'create']);
-                /**
-                 * @todo Must create a product controller. Once created, the new plan pathway must start by selecting an existing product.
-                 */
-
-                Route::get('/product', [ProductController::class, 'index'])->name('paypal.product.list');
-                Route::get('/product/new', [ProductController::class, 'create'])->name('paypal.product.new');
-                Route::post('/product/new', [ProductController::class, 'store']);
-                Route::get('/product/{id}', [ProductController::class, 'show'])->name('paypal.product.detail');
-                Route::get('/product/{id}/deactivate', [ProductController::class, 'deactivate'])->name('paypal.product.deactivate');
-
-        });
-    });
-
-});
+require __DIR__.'/auth.php';

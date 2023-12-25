@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Pcp;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProbateChampionMembership extends Model
+class Member extends Model
 {
     use HasFactory;
 }
