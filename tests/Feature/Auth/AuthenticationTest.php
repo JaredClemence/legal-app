@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Faker\Factory as FakerFactory;
 
 class AuthenticationTest extends TestCase
 {
@@ -23,11 +24,13 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $faker = FakerFactory::create();
+        $password = $faker->password;
+        $user = User::factory()->create(['password'=>$password]);
 
         $response = $this->post('/login', [
             'email' => $user->email,
-            'password' => 'password',
+            'password' => $password,
         ]);
 
         $this->assertAuthenticated();

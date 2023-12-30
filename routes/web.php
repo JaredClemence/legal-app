@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\KCBA\UserController;
+use App\Http\Controllers\KCBA\MemberController;
 use App\Http\Middleware\KCBA\IsBarMember;
 
 /*
@@ -35,11 +35,11 @@ Route::prefix('kcba')->group(function(){
     Route::get('register', function(){} )->name('bar.register');
     
     Route::middleware([IsBarMember::class])->group(function(){
-        Route::get('users',[UserController::class,'index'])->can('viewAll');
-        Route::post('users', [UserController::class,'create'])->can('create');
-        Route::get('users/{id}',[UserController::class,'edit'])->can('update');
-        Route::post('users/{id}',[UserController::class,'update'])->can('update');
-        Route::delete('users/{id}', [UserController::class,'destroy'])->can('delete');
+        Route::get('users',[MemberController::class,'index'])->can('viewAll');
+        Route::post('users', [MemberController::class,'create'])->can('create');
+        Route::get('users/{id}',[MemberController::class,'edit'])->can('update');
+        Route::post('users/{id}',[MemberController::class,'update'])->can('update');
+        Route::delete('users/{id}', [MemberController::class,'destroy'])->can('delete');
     });
 });
 
