@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\KCBA\User;
+use App\Models\KCBA\Member;
 
 class IsBarMember
 {
@@ -16,10 +17,20 @@ class IsBarMember
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if( $request->user()->isSectionMember() ){
+        $isSectionMember = $this->isSectionMember( $request->user() );
+        if( $isSectionMember ){
             return $next($request);
         }else{
             redirect('bar.login');
         }
     }
+
+    public function isSectionMember($user) {
+        if( $user == null ) return false;
+        
+        $id = $user->id;
+        $member = Member::where('user_id','=',$id)->get();
+        return $member !== null;
+    }
+
 }
