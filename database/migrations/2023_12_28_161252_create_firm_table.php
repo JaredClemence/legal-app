@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('work_emails', function (Blueprint $table) {
+        Schema::create('firms', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->char('email',100);
             $table->char('firm_name',250);
         });
     }

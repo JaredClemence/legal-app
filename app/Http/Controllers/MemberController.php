@@ -14,16 +14,7 @@ class MemberController extends Controller
      */
     public function index(Request $request)
     {
-        $firm_name = $request->user()->work_email->firm_name;
-        $emails = WorkEmail::with(['member'])->where(['firm_name'=>$firm_name])->get();
-        $members = $emails->map(
-                function( $email ){
-            $member = $email->member;
-            $member->work_email = $email;
-            return $member;
-                }
-                );
-        return view('kcba.members.index', compact('memeber'));
+        
     }
 
     /**

@@ -3,19 +3,20 @@
 namespace Database\Factories\KCBA;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\KCBA\WorkEmail;
+use App\Models\KCBA\Firm;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\KCBA\WorkEmail>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>
  */
-class WorkEmailFactory extends Factory
+class FirmFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var class-string<\Illuminate\Database\Eloquent\Model>
      */
-    protected $model = WorkEmail::class;
+    protected $model = Firm::class;
+    
     /**
      * Define the model's default state.
      *
@@ -24,8 +25,7 @@ class WorkEmailFactory extends Factory
     public function definition(): array
     {
         return [
-            'email'    => fake()->email(),
-            'firm_name'=> fake()->company()
+            'firm_name'=>fake()->company
         ];
     }
 }

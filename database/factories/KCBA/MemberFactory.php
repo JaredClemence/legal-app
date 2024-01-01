@@ -8,6 +8,7 @@ use App\Models\KCBA\WorkEmail;
 use Database\Factories\UserFactory;
 use App\Models\KCBA\Member;
 use App\Models\User;
+use App\Models\KCBA\Firm;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\KCBA\Member>
@@ -28,7 +29,6 @@ class MemberFactory extends Factory
      */
     public function definition(): array
     {
-        $email = WorkEmail::factory()->create();
         $barnum = '';
         for($i=0;$i<7;$i++){
             $barnum .= fake()->randomDigit();
@@ -38,7 +38,8 @@ class MemberFactory extends Factory
             'ACTIVE'];
         return [
             'user_id' => User::factory(),
-            'email_id'=> $email->id,
+            'firm_id' => Firm::factory(),
+            'work_email'=> fake()->companyEmail,
             'barnum'  => random_int(0, 1)==0?null:$barnum,
             'status'  => fake()->randomElement($status)
         ];

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->bigInteger('user_id');
-            $table->bigInteger('email_id');
+            $table->bigInteger('firm_id');
+            $table->char('work_email',100);
             $table->char('barnum',10)->nullable();
             $table->char('status',10)->default("PENDING");
         });

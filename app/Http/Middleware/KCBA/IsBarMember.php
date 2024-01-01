@@ -21,7 +21,7 @@ class IsBarMember
         if( $isSectionMember ){
             return $next($request);
         }else{
-            redirect('bar.login');
+            return redirect('bar.login');
         }
     }
 

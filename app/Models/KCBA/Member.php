@@ -23,12 +23,7 @@ class Member extends Model
    }
     
     public function getMembersFromMyFirm(){
-        $work_email = $this->work_email;
-        $firm = $work_email->firm_name;
-        
-        $members = DB::table('members')
-                ->leftJoin('work_emails','members.email_id','=','work_emails.id')
-                ->where('firm_name','=',$firm)
+        $members = Members::where('firm_id','=',$this->firm_id)
                 ->get();
         
         if($members->count == 0){
@@ -38,13 +33,13 @@ class Member extends Model
         return $members;
     }
     
-    public function work_email(): HasOne
-    {
-        return $this->hasOne(WorkEmail::class, 'id', 'email_id');
-    }
-    
     public function user(): HasOne
     {
         return $this->hasOne(User::class, 'id', 'user_id');
+    }
+    
+    public function firm(): HasOne
+    {
+        return $this->hasOne(Firm::class,'id', 'firm_id');
     }
 }
