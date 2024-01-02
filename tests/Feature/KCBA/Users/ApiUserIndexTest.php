@@ -13,18 +13,6 @@ use App\Models\KCBA\WorkEmail;
 class ApiUserIndexTest extends TestCase
 {
     /**
-     * @beforeClass
-     */
-    public function setUpDatabase(){
-        $this->artisan('migrate:fresh');
-        $this->seed(MemberSeeder::class);
-    }
-    
-    public function cleanUpDatabase(){
-        $this->artisan('migrate:fresh');
-    }
-    
-    /**
      * @group GateTest
      */
     public function test_route_returns_200():void {
