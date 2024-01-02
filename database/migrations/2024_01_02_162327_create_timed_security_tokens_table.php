@@ -11,15 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('members', function (Blueprint $table) {
+        Schema::create('timed_security_tokens', function (Blueprint $table) {
             $table->id();
+            $table->string('hash')->unique();
+            $table->integer('minutes_to_expire');
             $table->timestamps();
-            $table->bigInteger('user_id');
-            $table->bigInteger('firm_id');
-            $table->char('work_email',100);
-            $table->char('barnum',10)->nullable();
-            $table->char('status',10)->default("PENDING");
-            $table->char('role',10)->default("USER");
         });
     }
 
@@ -28,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('members');
+        Schema::dropIfExists('timed_security_tokens');
     }
 };

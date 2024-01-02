@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KCBA\MemberController;
 use App\Http\Middleware\KCBA\IsBarMember;
 use App\Models\KCBA\Member as BarMember;
+use App\Http\Middleware\KCBA\TimedTokenValid;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,9 +36,11 @@ Route::prefix('kcba')->group(function(){
     Route::get('login', function(){} )->name('bar.login');
     Route::get('register', function(){} )->name('bar.register');
     
+    Route::post('users', [MemberController::class,'create'])->middleware([TimedTokenValid::class]);//->can('create', BarMember::class);
+    Route::post('users/bulk', [MemberController::class,'createBulk'])->middleware([TimedTokenValid::class]);//->can('create', BarMember::class);
     Route::middleware([IsBarMember::class])->group(function(){
         Route::get('users',[MemberController::class,'index']);//->can('viewAll', BarMember::class);
-        Route::post('users', [MemberController::class,'create']);//->can('create', BarMember::class);
+        Route::get('users/bulk', [MemberController::class,'showBulkForm']);//->can('create', BarMember::class);
         Route::get('users/{member}',[MemberController::class,'edit']);//->can('update', 'id');
         Route::post('users/{member}',[MemberController::class,'update']);//->can('update', 'id');
         Route::delete('users/{member}', [MemberController::class,'destroy']);//->can('delete', 'id');

@@ -50,4 +50,9 @@ class Member extends Model
     {
         return $this->hasOne(Firm::class,'id', 'firm_id');
     }
+    
+    public function isAdmin() : bool
+    {
+        return $this->role == 'ADMIN';
+    }
 }
