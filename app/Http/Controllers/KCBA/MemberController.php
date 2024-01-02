@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\KCBA\Member as BarMember;
 use App\Models\User;
 use App\Models\KCBA\WorkEmail;
+use App\Models\KCBA\Firm;
 
 class MemberController extends Controller
 {
@@ -26,7 +27,11 @@ class MemberController extends Controller
      */
     public function create(Request $request)
     {
-        //
+        $user = $this->createOrUpdateUser($request);
+        $firm = $this->createOrUpdateFirm($request);
+        $member = $this->createOrUpdateMember($request, $user, $firm);
+        $members = [];
+        return view('kcba.members.index', compact('user','firm','member', 'members'));
     }
 
     /**
@@ -71,6 +76,59 @@ class MemberController extends Controller
 
     public function getMember(User $user) : BarMember {
         return BarMember::where('user_id','=',$user->id)->get()->first();
+    }
+
+    protected function createOrUpdateUser(Request $request) : User {
+        $user = User::where('email','=',$request->input('email'))->get()->first();
+        if( $user === null ){
+            $user = User::create( [
+                'name'=> $request->input('name'),
+                'email'=> $request->input('email'),
+                'password'=> fake()->password
+            ] );
+        }
+        else if ($user->name !== $request->input('name') ){
+            $user->name = $request->input('name');
+        }
+        if( $user->isDirty() ){
+            $user->save();
+            $user->refresh();
+        }
+        return $user;
+    }
+
+    protected function createOrUpdateFirm(Request $request) : Firm {
+        $firm = Firm::firstOrCreate(
+                [
+                    'firm_name'=>$request->input('firm_name')
+                ]
+                );
+        return $firm;
+    }
+
+    protected function createOrUpdateMember(Request $request, User $user, Firm $firm) : BarMember {
+        $member = BarMember::where('work_email','=',$request->input('work_email'))->get()->first();
+        if( $member === null ){
+            $member = BarMember::create(
+                    [
+                        'user_id'=>$user->id,
+                        'firm_id'=>$firm->id,
+                        'work_email'=>$request->input('work_email'),
+                        'barnum'=>$request->input('barnum',''),
+                        'status'=>'PENDING'
+                        ]
+                    );
+        }else{
+            if( $member->user_id !== $user->id ) $member->user_id = $user->id;
+            if( $member->firm_id !== $firm->id ) $member->firm_id = $firm->id;
+            if( $member->barnum !== $request->input('barnum','') ) $member->barnum = $request->input('barnum','');
+            if( $member->work_email !== $request->input('work_email','') ) $member->work_email = $request->input('work_email','');
+            if( $member->isDirty() ){
+                $member->save();
+                $member->refresh();
+            }
+        }
+        return $member;
     }
 
 }

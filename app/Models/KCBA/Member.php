@@ -14,6 +14,14 @@ class Member extends Model
 {
     use HasFactory;
     
+    public $fillable = [
+        'user_id',
+        'firm_id',
+        'barnum',
+        'status',
+        'work_email'
+    ];
+    
     /** 
     * Create a new factory instance for the model.
     */

@@ -13,6 +13,10 @@ class Firm extends Model
 {
     use HasFactory;
     
+    public $fillable = [
+        'firm_name'
+    ];
+    
     /**
     * Create a new factory instance for the model.
     */

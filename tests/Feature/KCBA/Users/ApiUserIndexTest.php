@@ -8,7 +8,6 @@ use Tests\TestCase;
 use Database\Seeders\Testing\KCBA\MemberSeeder;
 use App\Models\KCBA\Member;
 use Illuminate\Support\Facades\DB;
-use App\Models\KCBA\WorkEmail;
 
 class ApiUserIndexTest extends TestCase
 {
