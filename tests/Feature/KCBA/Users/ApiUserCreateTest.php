@@ -10,6 +10,7 @@ use App\Models\KCBA\Member;
 use Illuminate\Support\Facades\DB;
 use App\Models\KCBA\TimedSecurityToken;
 use Illuminate\Support\Carbon;
+use App\Models\User;
 
 class ApiUserCreateTest extends TestCase
 {
@@ -161,10 +162,31 @@ class ApiUserCreateTest extends TestCase
     /**
      * 
      * @group UserCreate
+     * @group UserCreated
      */
     public function test_new_user_created_on_post():void {
-        $this->markTestIncomplete("Not designed.");
+        $iteration = 0;
+        do{
+            $postedData = [
+                'name' => fake()->name,
+                'email' => fake()->email,
+                'work_email' => fake()->companyEmail,
+                'firm_name' => fake()->company,
+                'barnum' => fake()->text(7),
+            ];
+        }while( User::where('email','=',$postedData['email'])->get()->first() === null && $iteration++ < 5 );
         
+        $this->assertNull(User::where('email','=',$postedData['email'])->get()->first(), "User does not exist before the test.");
+        
+        $member = $this->get_random_active_member();
+        $member->role = "ADMIN";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        $response = $this->actingAs($user)
+                ->post("/kcba/users", $postedData);
+        
+        $this->assertNotNull(User::where('email','=',$postedData['email'])->get()->first(), "User exists after the test.");
     }
     
     /**
@@ -172,17 +194,53 @@ class ApiUserCreateTest extends TestCase
      * @group UserCreate
      */
     public function test_new_user_failed_without_security_token():void {
-        $this->markTestIncomplete("Not designed.");
+        $iteration = 0;
+        do{
+            $postedData = [
+                'name' => fake()->name,
+                'email' => fake()->email,
+                'work_email' => fake()->companyEmail,
+                'firm_name' => fake()->company,
+                'barnum' => fake()->text(7),
+            ];
+        }while( User::where('email','=',$postedData['email'])->get()->first() === null && $iteration++ < 5 );
         
+        $this->assertNull(User::where('email','=',$postedData['email'])->get()->first(), "User does not exist before the test.");
+        
+        $response = $this->post("/kcba/users", $postedData);
+        
+        $this->assertNull(User::where('email','=',$postedData['email'])->get()->first(), "User still doesn't exist after the test.");
     }
     
     /**
      * 
      * @group UserCreate
+     * @group UserOptionalFields
      */
     public function test_new_user_field_battery_demonstrates_flexible_use_of_optional_and_required_fields():void {
-        $this->markTestIncomplete("Not designed.");
+        $iteration = 0;
+        do{
+            $postedData = [
+                'name' => fake()->name,
+                'email' => fake()->companyEmail,
+                'firm_name' => fake()->company,
+            ];
+        }while( (User::where('email','=',$postedData['email'])->get()->first() === null ||
+                Member::where('work_email','=', $postedData['email'])->get()->first() === null
+                ) && $iteration++ < 5 );
         
+        $this->assertNull(User::where('email','=',$postedData['email'])->get()->first(), "User does not exist before the test.");
+        
+        $member = $this->get_random_active_member();
+        $member->role = "ADMIN";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        $response = $this->actingAs($user)
+                ->post("/kcba/users", $postedData);
+        
+        $this->assertNotNull(User::where('email','=',$postedData['email'])->get()->first(), "User exists after the test.");
+        $this->assertNotNull(Member::where('work_email','=', $postedData['email'])->get()->first(), "Member exists after the test.");
     }
     
     

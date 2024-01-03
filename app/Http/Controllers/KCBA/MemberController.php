@@ -97,7 +97,8 @@ class MemberController extends Controller
         return $user;
     }
 
-    protected function createOrUpdateFirm(Request $request) : Firm {
+    protected function createOrUpdateFirm(Request $request) {
+        if($request->input('firm_name',null)==null) return null;
         $firm = Firm::firstOrCreate(
                 [
                     'firm_name'=>$request->input('firm_name')
@@ -106,21 +107,21 @@ class MemberController extends Controller
         return $firm;
     }
 
-    protected function createOrUpdateMember(Request $request, User $user, Firm $firm) : BarMember {
-        $member = BarMember::where('work_email','=',$request->input('work_email'))->get()->first();
+    protected function createOrUpdateMember(Request $request, User $user, Firm $firm=null) : BarMember {
+        $member = BarMember::where('work_email','=',$request->input('work_email', $user->email))->get()->first();
         if( $member === null ){
             $member = BarMember::create(
                     [
                         'user_id'=>$user->id,
-                        'firm_id'=>$firm->id,
-                        'work_email'=>$request->input('work_email'),
+                        'firm_id'=>$firm?->id,
+                        'work_email'=>$request->input('work_email', $user->email),
                         'barnum'=>$request->input('barnum',''),
                         'status'=>'PENDING'
                         ]
                     );
         }else{
             if( $member->user_id !== $user->id ) $member->user_id = $user->id;
-            if( $member->firm_id !== $firm->id ) $member->firm_id = $firm->id;
+            if( $member->firm_id !== $firm?->id ) $member->firm_id = $firm?->id;
             if( $member->barnum !== $request->input('barnum','') ) $member->barnum = $request->input('barnum','');
             if( $member->work_email !== $request->input('work_email','') ) $member->work_email = $request->input('work_email','');
             if( $member->isDirty() ){
