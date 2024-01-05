@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\KCBA\TimedSecurityToken;
 use Illuminate\Support\Carbon;
 use App\Models\User;
+use Illuminate\Support\Facades\Event;
+use App\Events\KCBA\AdminCreatedMembers;
 
 class ApiUserCreateTest extends TestCase
 {
@@ -77,6 +79,37 @@ class ApiUserCreateTest extends TestCase
         $this->assertEquals( $postedData['work_email'], $member?->work_email, "Database contained new work email.");
         $this->assertEquals( $postedData['firm_name'], $member?->firm?->firm_name, "Database contained new firm name.");
         $this->assertEquals( $postedData['barnum'], $member?->barnum, "Database contained new member bar number.");
+    }
+    
+    /**
+     * 
+     * @return void
+     * @group EventsTest
+     */
+    public function test_new_member_created_by_admin_does_trigger_event():void {
+        Event::fake();
+        $postedData = $this->makeUniquePostedData();
+        $member = $this->get_random_active_member();
+        $member->role = "ADMIN";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        $response = $this->actingAs($user)
+                ->post("/kcba/users", $postedData);
+        Event::assertDispatched(AdminCreatedMembers::class);
+    }
+    /**
+     * 
+     * @return void
+     * @group EventsTest
+     */
+    public function test_new_member_created_with_token_does_not_trigger_event():void {
+        Event::fake();
+        $token = TimedSecurityToken::factory()->create();
+        $postedData = $this->makeUniquePostedData($token);
+        $response = $this->post('/kcba/users', $postedData);
+        $token->delete();
+        Event::assertNotDispatched(AdminCreatedMembers::class);
     }
     
     /**

@@ -8,6 +8,7 @@ use App\Models\KCBA\Member as BarMember;
 use App\Models\User;
 use App\Models\KCBA\WorkEmail;
 use App\Models\KCBA\Firm;
+use App\Events\KCBA\AdminCreatedMembers;
 
 class MemberController extends Controller
 {
@@ -30,6 +31,7 @@ class MemberController extends Controller
         $user = $this->createOrUpdateUser($request);
         $firm = $this->createOrUpdateFirm($request);
         $member = $this->createOrUpdateMember($request, $user, $firm);
+        $this->announceAdminCreatedMembers($request, collect([$member]));
         $members = [];
         return view('kcba.members.index', compact('user','firm','member', 'members'));
     }
@@ -130,6 +132,15 @@ class MemberController extends Controller
             }
         }
         return $member;
+    }
+
+    private function announceAdminCreatedMembers(Request $request, $memberCollection) {
+        if( $request->user() ){
+            $member = BarMember::where('user_id','=',$request->user()?->id)->get()->first();
+            if( $member?->isAdmin() ){
+                AdminCreatedMembers::dispatch($memberCollection);
+            }
+        }
     }
 
 }
