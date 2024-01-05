@@ -37,20 +37,12 @@ class ApiUserCreateTest extends TestCase
         parent::tearDown();
     }
     /**
-     * 
      * @group UserCreate
      * @group TokenImmediate
      */
     public function test_route_returns_200_with_token():void {
         $token = TimedSecurityToken::factory()->create();
-        $postedData = [
-            'name' => fake()->name,
-            'email' => fake()->email,
-            'work_email' => fake()->companyEmail,
-            'firm_name' => fake()->company,
-            'barnum' => fake()->text(7),
-            'token'=>$token->hash,
-        ];
+        $postedData = $this->makeUniquePostedData($token);
         $response = $this->post("/kcba/users", $postedData);
         $token->delete();
         $response->assertSuccessful();
@@ -60,13 +52,7 @@ class ApiUserCreateTest extends TestCase
      * @group UserCreate
      */
     public function test_route_returns_200_for_admin():void {
-        $postedData = [
-            'name' => fake()->name,
-            'email' => fake()->email,
-            'work_email' => fake()->companyEmail,
-            'firm_name' => fake()->company,
-            'barnum' => fake()->text(7),  
-        ];
+        $postedData = $this->makeUniquePostedData();
         $member = $this->get_random_active_member();
         $member->role = "ADMIN";
         $member->save();
@@ -79,14 +65,7 @@ class ApiUserCreateTest extends TestCase
     
     public function test_call_creates_database_entry():void {
         $token = TimedSecurityToken::factory()->create();
-        $postedData = [
-            'name' => fake()->name,
-            'email' => fake()->email,
-            'work_email' => fake()->companyEmail,
-            'firm_name' => fake()->company,
-            'barnum' => fake()->text(7),
-            'token'=>$token->hash,
-        ];
+        $postedData = $this->makeUniquePostedData($token);
         $response = $this->post('/kcba/users', $postedData);
         $token->delete();
         
@@ -105,14 +84,7 @@ class ApiUserCreateTest extends TestCase
      */
     public function test_new_members_have_pending_status():void {
         $token = TimedSecurityToken::factory()->create();
-        $postedData = [
-            'name' => fake()->name,
-            'email' => fake()->email,
-            'work_email' => fake()->companyEmail,
-            'firm_name' => fake()->company,
-            'barnum' => fake()->text(7),
-            'token'=>$token->hash,
-        ];
+        $postedData = $this->makeUniquePostedData($token);
         $response = $this->post('/kcba/users', $postedData);
         $members = Member::with(['user','firm'])->where('work_email','=',$postedData['work_email'])->get();
         $this->assertEquals( 1, $members?->count(), "One and only one member has the new email address." );
@@ -126,13 +98,7 @@ class ApiUserCreateTest extends TestCase
      * @group UserCreate
      */
     public function test_route_fails_without_security_token():void {
-        $postedData = [
-            'name' => fake()->name,
-            'email' => fake()->email,
-            'work_email' => fake()->companyEmail,
-            'firm_name' => fake()->company,
-            'barnum' => fake()->text(7),
-        ];
+        $postedData = $this->makeUniquePostedData();
         $response = $this->post('/kcba/users', $postedData);
         $response->assertStatus(401);
     }
@@ -144,14 +110,7 @@ class ApiUserCreateTest extends TestCase
      */
     public function test_route_fails_with_expired_security_token():void {
         $token = TimedSecurityToken::factory()->three_days_to_expire()->create();
-        $postedData = [
-            'name' => fake()->name,
-            'email' => fake()->email,
-            'work_email' => fake()->companyEmail,
-            'firm_name' => fake()->company,
-            'barnum' => fake()->text(7),
-            'token'=>$token->hash,
-        ];
+        $postedData = $this->makeUniquePostedData($token);
         $this->travel(4)->days(function() use ($postedData) {
             $response = $this->post('/kcba/users', $postedData);
         $response->assertStatus(403);
@@ -165,17 +124,7 @@ class ApiUserCreateTest extends TestCase
      * @group UserCreated
      */
     public function test_new_user_created_on_post():void {
-        $iteration = 0;
-        do{
-            $postedData = [
-                'name' => fake()->name,
-                'email' => fake()->email,
-                'work_email' => fake()->companyEmail,
-                'firm_name' => fake()->company,
-                'barnum' => fake()->text(7),
-            ];
-        }while( User::where('email','=',$postedData['email'])->get()->first() === null && $iteration++ < 5 );
-        
+        $postedData = $this->makeUniquePostedData(null);
         $this->assertNull(User::where('email','=',$postedData['email'])->get()->first(), "User does not exist before the test.");
         
         $member = $this->get_random_active_member();
@@ -194,16 +143,7 @@ class ApiUserCreateTest extends TestCase
      * @group UserCreate
      */
     public function test_new_user_failed_without_security_token():void {
-        $iteration = 0;
-        do{
-            $postedData = [
-                'name' => fake()->name,
-                'email' => fake()->email,
-                'work_email' => fake()->companyEmail,
-                'firm_name' => fake()->company,
-                'barnum' => fake()->text(7),
-            ];
-        }while( User::where('email','=',$postedData['email'])->get()->first() === null && $iteration++ < 5 );
+        $postedData = $this->makeUniquePostedData();
         
         $this->assertNull(User::where('email','=',$postedData['email'])->get()->first(), "User does not exist before the test.");
         
@@ -250,4 +190,27 @@ class ApiUserCreateTest extends TestCase
         $member = Member::where('status','=','ACTIVE')->with(['user'])->inRandomOrder()->first();
         return $member;
     }
+
+    public function makeUniquePostedData($token=null) {
+        $iteration = 0;
+        do{
+            $postedData = [
+                'name' => fake()->name,
+                'email' => fake()->email,
+                'work_email' => fake()->companyEmail,
+                'firm_name' => fake()->company,
+                'barnum' => fake()->text(7),
+            ];
+        }while( (
+                User::where('email','=',$postedData['email'])->get()->first() === null ||
+                Member::where('work_email','=', $postedData['email'])->get()->first() === null ||
+                Member::where('work_email','=', $postedData['work_email'])->get()->first() === null
+                ) && 
+                $iteration++ < 5 );
+        if($token!==null){
+            $postedData['token']=$token->hash;
+        }
+        return $postedData;
+    }
+
 }
