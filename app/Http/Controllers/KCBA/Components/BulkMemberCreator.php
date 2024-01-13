@@ -26,26 +26,38 @@ class BulkMemberCreator extends Controller
         return $this->members;
     }
     private function createBulkMembersFromRequestData(Request $request){
-        $users = $this->createBulkUsers($request);
-        $firms = $this->createBulkFirms($request);
-        $members = $this->createBulkMembers($request, $users, $firms);
-        $this->members = $members;
+        try{
+            $users = $this->createBulkUsers($request);
+            $firms = $this->createBulkFirms($request);
+            $members = $this->createBulkMembers($request, $users, $firms);
+            $this->members = $members;
+        }catch(\Exception $e){
+            if( $e->getCode()!=982 ){
+                //Log error but don't crash.
+                //most likely cause is badly labeled fields.
+                throw $e;
+            }
+        }
     }
     private function createBulkUsers(Request $request) {
         $userRows = [];
         for( $i=0; $i<100; $i++){
             $user = $this->extractUserRow($request, $i);
-            if( $user === null ){
-                break;
-            }else{
-                $userRow[] = $user;
-            }
+            if( $user['email'] == '' ) break;
+            $userRows[] = $user;
         }
-        DB::table('users')->insertOrIgnore($userRows);
-        $emails = collect($userRows)
-                ->select('id','email')
-                ->whereIn('email',$emails)
-                ->get();
+        $goodUsers = collect( $userRows )->filter(function($user){
+            return $user['email']!=='';
+        });
+        if( $goodUsers->count() === 0 ){
+            throw new \Exception( "User rows is empty.",982);
+        }
+        DB::table('users')->insertOrIgnore($goodUsers->toArray());
+        $emails = $goodUsers
+                ->map(function($user){return $user['email'];})
+                ->filter(function($email){
+                    return $email != null;
+                });
         $users = DB::table('users')->select('id','email')->whereIn('email',$emails)->get();
         return $users;
     }
@@ -61,7 +73,7 @@ class BulkMemberCreator extends Controller
             }
         }
         $firmRowsReduced = $this->reduceFirmRowsDuplicates($firmRows);
-        DB::table('firms')->insertOrIgnore($firmRowsReduced);
+        DB::table('firms')->insertOrIgnore($firmRowsReduced->toArray());
         $firms = DB::table('firms')
                 ->select('id','firm_name')
                 ->whereIn('firm_name',$firmRowsReduced)
@@ -73,17 +85,20 @@ class BulkMemberCreator extends Controller
         $memberRows = [];
         for( $i=0; $i<100; $i++){
             $user = $this->extractMemberRow($request, $i, $users, $firms);
-            if( $user === null ){
-                break;
-            }else{
-                $userRow[] = $user;
-            }
+            if( $user == null || $user['work_email']=="" ) break;
+            $memberRows[] = $user;
         }
-        DB::table('users')->insertOrIgnore($userRows);
-        $emails = collect($userRows)->map(function($member){
-            return $member['work_email'];
-        })->unique();
-        $members = Member::whereIn('work_email',$emails)
+        DB::table('members')->insertOrIgnore($memberRows);
+        
+        $memberCollection = collect($memberRows);
+        $emailCollection = $memberCollection->map(
+                    function($member){
+                        return $member["work_email"];
+                    }
+                );
+        $uniqueEmails = $emailCollection->unique();
+        
+        $members = Member::whereIn('work_email',$uniqueEmails)
                 ->with(['user','firm'])
                 ->get();
         return $members;
@@ -92,7 +107,7 @@ class BulkMemberCreator extends Controller
     private function extractUserRow(Request $request, $i) {
         $row = [
             'name'=>$request->input('name_' . $i, ''),
-            'email'=>$request->input('email_' . $i),
+            'email'=>$request->input('email_' . $i, ''),
             'email_verified_at'=>null,
             'password'=>fake()->password
         ];
@@ -107,27 +122,38 @@ class BulkMemberCreator extends Controller
     }
 
     private function extractMemberRow(Request $request, $i, $users, $firms) {
-        $email = $request->input('email_' . $i);
+        $email = $request->input('email_' . $i,"");
+        if($email == "" ) return null;
+        $userid = $this->findUserId( $users, $email );
+        
         $firm_name = $request->input('firm_' . $i, '');
-        $userFinder = function( $email ){
-            return function( $userRow ) use ($email){
-                return ($userRow['email']==$email);
-            };
-        };
-        $firmFinder = function( $firmName ){
-            return function( $userRow ) use ($firmName){
-                return ($userRow['firm_name']==$firmName);
-            };
-        };
+        $firmid = $this->findFirmId( $firms, $firm_name );
+        
         $row = [
-            'user_id'=>$users->first( $userFinder($email) )->select('id'),
-            'firm_id'=>$firms->first( $firmFinder($firm_name) )->select('id'),
+            'user_id'=>$userid,
+            'firm_id'=>$firmid,
             'work_email'=>$email,
             'barnum'=>$request->input('barnum_' . $i, ''),
             'status'=>$request->input('status_' . $i, 'PENDING'),
             'role'=>$request->input('role_' . $i, 'USER')
         ];
         return $row;
+    }
+    
+    private function findUserId( $userCollection, $email ){
+        return $userCollection
+                ->filter(
+                        function($user) use ($email) {return $user->email==$email;}
+                        )
+                ->first()?->id;
+    }
+    
+    private function findFirmId( $firmCollection, $firm_name ){
+        return $firmCollection
+                ->filter(
+                        function($firm) use ($firm_name) {return $firm->firm_name==$firm_name;}
+                        )
+                ->first()?->id;
     }
 
     private function reduceFirmRowsDuplicates($firmRows) {
