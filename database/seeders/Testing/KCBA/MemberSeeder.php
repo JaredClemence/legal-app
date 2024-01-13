@@ -18,6 +18,6 @@ class MemberSeeder extends Seeder
         $factories = Firm::factory()->count(10)->create();
         $members = Member::factory()
                 ->recycle($factories)
-                ->count(100)->create(/*['firm_id'=>$factories->random()->id]*/);
+                ->count(30)->create(/*['firm_id'=>$factories->random()->id]*/);
     }
 }

@@ -50,7 +50,6 @@ class ApiUserCreateTest extends TestCase
         $response->assertSuccessful();
     }
     /**
-     * 
      * @group UserCreate
      */
     public function test_route_returns_200_for_admin():void {
@@ -65,6 +64,9 @@ class ApiUserCreateTest extends TestCase
         $response->assertSuccessful();
     }
     
+    /**
+     * @group UserCreate
+     */
     public function test_call_creates_database_entry():void {
         $token = TimedSecurityToken::factory()->create();
         $postedData = $this->makeUniquePostedData($token);
@@ -80,6 +82,72 @@ class ApiUserCreateTest extends TestCase
         $this->assertEquals( $postedData['firm_name'], $member?->firm?->firm_name, "Database contained new firm name.");
         $this->assertEquals( $postedData['barnum'], $member?->barnum, "Database contained new member bar number.");
     }
+    
+    /**
+     * @group UserCreate
+     * @group BulkCreateAdmin
+     */
+    public function test_admin_can_create_bulk_members():void{
+        Event::fake();
+        $postedData = $this->makeUniquePostedData();
+        $member = $this->get_random_active_member();
+        $member->role = "ADMIN";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        $response = $this->actingAs($user)
+                ->post("/kcba/users/bulk", $postedData);
+        $response->assertSuccessful();
+        Event::assertDispatched(AdminCreatedMembers::class);
+    }
+    /**
+     * @group UserCreate
+     * @group BulkCreate
+     */
+    public function test_token_cannot_create_bulk_members():void{
+        Event::fake();
+        $token = TimedSecurityToken::factory()->create();
+        $postedData = $this->makeUniquePostedData($token);
+        $response = $this->post("/kcba/users/bulk", $postedData);
+        $token->delete();
+        
+        $response->assertStatus(401);
+        Event::assertNotDispatched(AdminCreatedMembers::class);
+    }
+    /**
+     * @group UserCreate
+     * @group BulkCreate
+     */
+    public function test_user_cannot_create_bulk_members():void{
+        Event::fake();
+        $postedData = $this->makeUniquePostedData();
+        $member = $this->get_random_active_member();
+        $member->role = "USER";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        $response = $this->actingAs($user)
+                ->post("/kcba/users/bulk", $postedData);
+        
+        $response->assertStatus(403);
+        Event::assertNotDispatched(AdminCreatedMembers::class);
+    }
+    /**
+     * @group UserCreate
+     * @group BulkCreate
+     */
+    public function test_creating_bulk_members_fires_one_event():void{
+        Event::fake();
+        $postedData = $this->makeUniquePostedData();
+        $member = $this->get_random_active_member();
+        $member->role = "ADMIN";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        $response = $this->actingAs($user)
+                ->post("/kcba/users/bulk", $postedData);
+        $response->assertSuccessful();
+        Event::assertDispatched(AdminCreatedMembers::class);}
     
     /**
      * 

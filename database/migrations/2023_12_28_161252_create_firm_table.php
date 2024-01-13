@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('firms', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->char('firm_name',250);
+            $table->char('firm_name',250)->unique()->nullable();
         });
     }
 

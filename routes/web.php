@@ -37,7 +37,8 @@ Route::prefix('kcba')->group(function(){
     Route::get('register', function(){} )->name('bar.register');
     
     Route::post('users', [MemberController::class,'create'])->middleware([TimedTokenValid::class]);//->can('create', BarMember::class);
-    Route::post('users/bulk', [MemberController::class,'createBulk'])->middleware([TimedTokenValid::class]);//->can('create', BarMember::class);
+    Route::post('users/bulk', [MemberController::class,'createBulk'])->name('kcba.bulk.create');
+    //Route::post('users/bulk', [MemberController::class,'createBulk']);//->can('create', BarMember::class);
     Route::middleware([IsBarMember::class])->group(function(){
         Route::get('users',[MemberController::class,'index']);//->can('viewAll', BarMember::class);
         Route::get('users/bulk', [MemberController::class,'showBulkForm']);//->can('create', BarMember::class);

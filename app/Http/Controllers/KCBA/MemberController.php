@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\KCBA\WorkEmail;
 use App\Models\KCBA\Firm;
 use App\Events\KCBA\AdminCreatedMembers;
+use App\Http\Controllers\KCBA\Components\BulkMemberCreator;
 
 class MemberController extends Controller
 {
@@ -35,6 +36,29 @@ class MemberController extends Controller
         $members = [];
         return view('kcba.members.index', compact('user','firm','member', 'members'));
     }
+    
+    /**
+     * Receive form data for multiple member creations.
+     */
+    public function createBulk(Request $request, BulkMemberCreator $helper)
+    {
+        $activeMember = BarMember::where('user_id','=',$request->user()?->id)->get()->first();
+        //dd([$activeMember?->isAdmin() === false,$activeMember === null ]);
+        if( $activeMember === null || $activeMember?->isAdmin() === false){
+            $responseCode = $request->user() ? 403 : 401;
+            return response('unauthorized access', $responseCode);
+        }
+        try{
+            $helper->process($request);
+            $members = $helper->getNewMembers();
+
+            $this->announceAdminCreatedMembers($request, $members);
+            $members = [];
+            return view('kcba.members.index', compact('user','firm','member', 'members'));
+        }catch( Exception $e ){
+            return response( $e->getMessage(), $e->getCode() );
+        }
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -50,6 +74,10 @@ class MemberController extends Controller
     public function show(Request $request, BarMember $member)
     {
         //
+    }
+    
+    public function showBulkForm(Request $request){
+        return view('kcba.members.bulk');
     }
 
     /**
@@ -142,5 +170,7 @@ class MemberController extends Controller
             }
         }
     }
+
+    
 
 }
