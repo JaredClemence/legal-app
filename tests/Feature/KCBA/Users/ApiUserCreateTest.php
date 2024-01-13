@@ -54,11 +54,7 @@ class ApiUserCreateTest extends TestCase
      */
     public function test_route_returns_200_for_admin():void {
         $postedData = $this->makeUniquePostedData();
-        $member = $this->get_random_active_member();
-        $member->role = "ADMIN";
-        $member->save();
-        $member->refresh();
-        $user = $member->user;
+        $user = $this->makeAdminUser();
         $response = $this->actingAs($user)
                 ->post("/kcba/users", $postedData);
         $response->assertSuccessful();
@@ -89,12 +85,9 @@ class ApiUserCreateTest extends TestCase
      */
     public function test_admin_can_create_bulk_members():void{
         Event::fake();
-        $postedData = $this->makeUniquePostedData();
-        $member = $this->get_random_active_member();
-        $member->role = "ADMIN";
-        $member->save();
-        $member->refresh();
-        $user = $member->user;
+        $users = $this->makeBulkUserData(25);
+        $postedData = $this->flattenBulkUserCollection($users);
+        $user = $this->makeAdminUser();
         $response = $this->actingAs($user)
                 ->post("/kcba/users/bulk", $postedData);
         $response->assertSuccessful();
@@ -120,12 +113,9 @@ class ApiUserCreateTest extends TestCase
      */
     public function test_user_cannot_create_bulk_members():void{
         Event::fake();
-        $postedData = $this->makeUniquePostedData();
-        $member = $this->get_random_active_member();
-        $member->role = "USER";
-        $member->save();
-        $member->refresh();
-        $user = $member->user;
+        $users = $this->makeBulkUserData(25);
+        $postedData = $this->flattenBulkUserCollection($users);
+        $user = $this->makeNonAdminUser();
         $response = $this->actingAs($user)
                 ->post("/kcba/users/bulk", $postedData);
         
@@ -135,15 +125,13 @@ class ApiUserCreateTest extends TestCase
     /**
      * @group UserCreate
      * @group BulkCreate
+     * @group EventFire
      */
     public function test_creating_bulk_members_fires_one_event():void{
         Event::fake();
-        $postedData = $this->makeUniquePostedData();
-        $member = $this->get_random_active_member();
-        $member->role = "ADMIN";
-        $member->save();
-        $member->refresh();
-        $user = $member->user;
+        $users = $this->makeBulkUserData(25);
+        $postedData = $this->flattenBulkUserCollection($users);
+        $user = $this->makeAdminUser();
         $response = $this->actingAs($user)
                 ->post("/kcba/users/bulk", $postedData);
         $response->assertSuccessful();
@@ -157,11 +145,7 @@ class ApiUserCreateTest extends TestCase
     public function test_new_member_created_by_admin_does_trigger_event():void {
         Event::fake();
         $postedData = $this->makeUniquePostedData();
-        $member = $this->get_random_active_member();
-        $member->role = "ADMIN";
-        $member->save();
-        $member->refresh();
-        $user = $member->user;
+        $user = $this->makeAdminUser();
         $response = $this->actingAs($user)
                 ->post("/kcba/users", $postedData);
         Event::assertDispatched(AdminCreatedMembers::class);
@@ -228,11 +212,7 @@ class ApiUserCreateTest extends TestCase
         $postedData = $this->makeUniquePostedData(null);
         $this->assertNull(User::where('email','=',$postedData['email'])->get()->first(), "User does not exist before the test.");
         
-        $member = $this->get_random_active_member();
-        $member->role = "ADMIN";
-        $member->save();
-        $member->refresh();
-        $user = $member->user;
+        $user = $this->makeAdminUser();
         $response = $this->actingAs($user)
                 ->post("/kcba/users", $postedData);
         
@@ -291,8 +271,46 @@ class ApiUserCreateTest extends TestCase
         $member = Member::where('status','=','ACTIVE')->with(['user'])->inRandomOrder()->first();
         return $member;
     }
+    
+    private function makeBulkUserData($count, $token=null){
+        $users = [];
+        for( $i = 0; $i < max($count * 2, 10); $i++ ){
+            $user = $this->makeUniquePostedData($token);
+            $users[] = $user;
+        }
+        $userCollection = collect($users);
+        $user_emails = $userCollection->map(function($user){ return $user['email']; });
+        $work_emails = $userCollection->map(function($user){ return $user['work_email']; });
+        $nonUniqueUserEmails = $this->identifyExistingUserEmails( $user_emails );
+        $nonUniqueWorkEmails = $this->identifyExistingWorkEmails( $work_emails );
+        $cleanCollection = $userCollection
+                ->filter(function($user) use ($nonUniqueUserEmails,$nonUniqueWorkEmails) {
+                    $workEmailMatches = $nonUniqueWorkEmails->contains($user['work_email']);
+                    $userEmailMatches = $nonUniqueUserEmails->contains($user['email']);
+                    $isUnique = $workEmailMatches==false && $userEmailMatches==false;
+                    return $isUnique;
+                });
+        $resizedCleanCollection = $cleanCollection->shift($count);
+        return $resizedCleanCollection;
+    }
+    
+    private function flattenBulkUserCollection($users){
+        $bulkUsers = [];
+        $fields = ["name","email","work_email","firm_name","barnum"];
+        $i = 0;
+        foreach( $users as $user ){
+            foreach($fields as $fieldName){
+                $bulkStart = $fieldName == "firm_name" ? "firm" : $fieldName;
+                $bulkName = $bulkStart . "_" . $i;
+                $bulkUsers[$bulkName] = $user[$fieldName];
+            }
+            $i++;
+        }
+        return $bulkUsers;
+    }
+    
 
-    public function makeUniquePostedData($token=null) {
+    private function makeUniquePostedData($token=null) {
         $iteration = 0;
         do{
             $postedData = [
@@ -312,6 +330,34 @@ class ApiUserCreateTest extends TestCase
             $postedData['token']=$token->hash;
         }
         return $postedData;
+    }
+
+    private function identifyExistingUserEmails($user_emails) {
+        $existingEmails = User::select('email')->whereIn('email',$user_emails)->get()->map(function($result){ return $result['email']; } );
+        return $existingEmails;
+    }
+
+    private function identifyExistingWorkEmails($work_emails) {
+        $existingEmails = Member::select('work_email')->whereIn('work_email',$work_emails)->get()->map(function($result){ return $result['work_emails']; } );
+        return $existingEmails;
+    }
+
+    private function makeAdminUser() {
+        $member = $this->get_random_active_member();
+        $member->role = "ADMIN";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        return $user;
+    }
+
+    private function makeNonAdminUser() {
+        $member = $this->get_random_active_member();
+        $member->role = "USER";
+        $member->save();
+        $member->refresh();
+        $user = $member->user;
+        return $user;
     }
 
 }
