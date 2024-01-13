@@ -51,10 +51,9 @@ class MemberController extends Controller
         try{
             $helper->process($request);
             $members = $helper->getNewMembers();
-
             $this->announceAdminCreatedMembers($request, $members);
             $members = [];
-            return view('kcba.members.index', compact('user','firm','member', 'members'));
+            return view('kcba.members.index', compact('members'));
         }catch( Exception $e ){
             return response( $e->getMessage(), $e->getCode() );
         }
@@ -163,9 +162,13 @@ class MemberController extends Controller
     }
 
     private function announceAdminCreatedMembers(Request $request, $memberCollection) {
-        if( $request->user() ){
-            $member = BarMember::where('user_id','=',$request->user()?->id)->get()->first();
-            if( $member?->isAdmin() ){
+        $user =  $request->user();
+        $userid = $user?->id;
+        if( $userid ){
+            $member = BarMember::where('user_id','=',$userid)->first();
+            $isAdmin = $member?->isAdmin();
+            
+            if( $isAdmin ){
                 AdminCreatedMembers::dispatch($memberCollection);
             }
         }
