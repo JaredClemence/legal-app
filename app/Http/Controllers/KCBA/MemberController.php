@@ -10,6 +10,7 @@ use App\Models\KCBA\WorkEmail;
 use App\Models\KCBA\Firm;
 use App\Events\KCBA\AdminCreatedMembers;
 use App\Http\Controllers\KCBA\Components\BulkMemberCreator;
+use Illuminate\Support\Facades\Auth;
 
 class MemberController extends Controller
 {
@@ -94,9 +95,21 @@ class MemberController extends Controller
     public function update(Request $request, BarMember $member)
     {
         $changedFields = $this->determineChanges($request, $member);
+        $loggedInMember = $this->getAuthenticatedMember();
         if( count( $changedFields ) > 0 ){
             //at least one change has been made
-            
+            if( $loggedInMember->isAdmin() ){
+                //admin
+                $this->applyChangesAsAdmin( $changedFields, $member );
+            }else if( $this->hasValidToken($request) ){
+                //token bearer
+                $this->applyChangesAsTokenBearer( $changedFields, $member );
+            }else if( Auth::user()?->id == $member->user->id ){
+                //just a regular user
+                $this->applyChangesAsSelf($changedFields, $member);
+            }else{
+                return response("Invalid access to other user's data.", 403);
+            }
         }
         return $this->edit($request, $member);
     }
@@ -190,6 +203,31 @@ class MemberController extends Controller
             }
         }
         return $changedData;
+    }
+
+    private function applyChangesAsAdmin($changedFields, $member) {
+        
+    }
+
+    private function hasValidToken($request) {
+        
+    }
+
+    private function applyChangesAsTokenBearer($changedFields, $member) {
+        
+    }
+
+    private function applyChangesAsSelf($changedFields, $member) {
+        
+    }
+
+    private function getAuthenticatedMember() {
+        $user = Auth::user();
+        $member = null;
+        if($user){
+            $member = BarMember::where('user_id','=',$user->id)->first();
+        }
+        return $member;
     }
 
 }
