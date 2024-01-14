@@ -84,7 +84,8 @@ class MemberController extends Controller
      */
     public function edit(Request $request, BarMember $member)
     {
-        //
+        $formData = $member->getFormData();
+        return view('kcba.members.edit', $formData);
     }
 
     /**
@@ -92,7 +93,12 @@ class MemberController extends Controller
      */
     public function update(Request $request, BarMember $member)
     {
-        //
+        $changedFields = $this->determineChanges($request, $member);
+        if( count( $changedFields ) > 0 ){
+            //at least one change has been made
+            
+        }
+        return $this->edit($request, $member);
     }
 
     /**
@@ -174,6 +180,16 @@ class MemberController extends Controller
         }
     }
 
-    
+    private function determineChanges(Request $request, BarMember $member) {
+        $changedData = [];
+        $currentValues = $member->getFormData();
+        $requestInputs = $request->all();
+        foreach($currentValues as $key=>$data){
+            if( isset($requestInputs[$key]) && $data != $requestInputs[$key] ){
+                $changedData[$key]=$data;
+            }
+        }
+        return $changedData;
+    }
 
 }

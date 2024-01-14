@@ -63,6 +63,20 @@ class ApiUserEditTokenTest extends TestCase
     public function test_token_can_set_password():void {}
     public function test_token_can_set_email_verified_at():void {}
     
+    public function test_token_cannot_change_email_to_shared_email():void {
+        
+    }
+    
+    public function test_attempt_to_change_shared_email_by_token_triggers_event():void {
+        //concept -> event will likely cause a logged entry and will 
+        //cause a special password reset email to be sent to the owning user
+        //reminding that user of their correct account. (Solution assumes that 
+        //email holder does not realize they are using a different email to manage
+        //their account.
+        
+        
+    }
+    
     private function makeUniquePostedData($token=null) {
         $iteration = 0;
         do{

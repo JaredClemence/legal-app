@@ -42,7 +42,7 @@ Route::prefix('kcba')->group(function(){
     Route::middleware([IsBarMember::class])->group(function(){
         Route::get('users',[MemberController::class,'index']);//->can('viewAll', BarMember::class);
         Route::get('users/bulk', [MemberController::class,'showBulkForm']);//->can('create', BarMember::class);
-        Route::get('users/{member}',[MemberController::class,'edit']);//->can('update', 'id');
+        Route::get('users/{member}',[MemberController::class,'edit'])->name('kcba.member.edit');//->can('update', 'id');
         Route::post('users/{member}',[MemberController::class,'update']);//->can('update', 'id');
         Route::delete('users/{member}', [MemberController::class,'destroy']);//->can('delete', 'id');
     });

@@ -55,4 +55,22 @@ class Member extends Model
     {
         return $this->role == 'ADMIN';
     }
+
+    public function getFormData() {
+        $user = $this->user;
+        $firm = $this->firm;
+        return [
+            'name'=>$user->name,
+            'email'=>$user->email,
+            'password'=>$user->password,
+            'work_email'=>$this->work_email,
+            'barnum'=>$this->barnum,
+            'user_id'=>$this->user_id,
+            'firm_id'=>$this->firm_id,
+            'firm_name'=>$firm->firm_name,
+            'status'=>$this->status,
+            'role'=>$this->role
+        ];
+    }
+
 }
