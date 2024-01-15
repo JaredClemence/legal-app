@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\KCBA\User;
 use App\Models\KCBA\Member;
+use App\Models\KCBA\TimedSecurityToken;
 
 class IsBarMember
 {
@@ -18,7 +19,7 @@ class IsBarMember
     public function handle(Request $request, Closure $next): Response
     {
         $isSectionMember = $this->isSectionMember( $request->user() );
-        if( $isSectionMember ){
+        if( $isSectionMember || TimedSecurityToken::requestHasValidToken($request) ){
             return $next($request);
         }else{
             return redirect('bar.login');

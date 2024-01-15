@@ -12,6 +12,7 @@ use App\Events\KCBA\AdminCreatedMembers;
 use App\Http\Controllers\KCBA\Components\BulkMemberCreator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\KCBA\TimedSecurityToken;
 
 class MemberController extends Controller
 {
@@ -99,10 +100,10 @@ class MemberController extends Controller
         $loggedInMember = $this->getAuthenticatedMember();
         if( count( $changedFields ) > 0 ){
             //at least one change has been made
-            if( $loggedInMember->isAdmin() ){
+            if( $loggedInMember?->isAdmin() ){
                 //admin
                 $this->applyChangesAsAdmin( $changedFields, $member );
-            }else if( $this->hasValidToken($request) ){
+            }else if(TimedSecurityToken::requestHasValidToken($request)){
                 //token bearer
                 $this->applyChangesAsTokenBearer( $changedFields, $member );
             }else if( Auth::user()?->id == $member->user->id ){
@@ -213,22 +214,33 @@ class MemberController extends Controller
         }
     }
 
-    private function hasValidToken($request) {
-        
-    }
-
     private function applyChangesAsTokenBearer($changedFields, $member) {
+        $user = $member->user;
+        $firm = $member->firm;
         foreach($changedFields as $key=>$value){
             switch($key){
                 case 'barnum':
+                    $member->barnum = $value;
                     break;
                 case 'name':
+                    $user->name = $value;
                     break;
                 case 'password':
+                    $user->password = Hash::make($value);
                     break;
                 case 'firm_name':
+                    if($firm->firm_name != $value){
+                        //new firm needs to be selected
+                        $this->setFirmToNewValue($member, $value);
+                    }
                     break;
             }
+        }
+        if( $user->isDirty() ){
+            $user->save();
+        }
+        if( $member->isDirty() ){
+            $member->save();
         }
     }
 

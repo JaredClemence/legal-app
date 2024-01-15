@@ -61,8 +61,7 @@ class ApiUserEditTokenTest extends TestCase
      * @dataProvider fieldTestChangeData
      */
     public function test_user_changes_to_existing_values($expectedChangeAbility, $fieldName):void {
-        //$token = TimedSecurityToken::factory()->create();
-        $token = null;
+        $token = TimedSecurityToken::factory()->create();
         $member = $this->makeNonAdminMember();
         $user = $member->user;
                 
@@ -74,8 +73,7 @@ class ApiUserEditTokenTest extends TestCase
                 "The changed field test failed to establish propper initial "
                 . "conditions, because $fieldName equals $originalValue in the "
                 . "database and is {$postedData[$fieldName]} in the POST data.");
-        $response = $this->actingAs($user)
-                ->post(route('kcba.member.edit',compact('member')), $postedData);
+        $response = $this->post(route('kcba.member.edit',compact('member')), $postedData);
         if($token) $token->delete();
         $response->assertSuccessful();
         
