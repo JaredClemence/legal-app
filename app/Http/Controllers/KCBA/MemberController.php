@@ -11,6 +11,7 @@ use App\Models\KCBA\Firm;
 use App\Events\KCBA\AdminCreatedMembers;
 use App\Http\Controllers\KCBA\Components\BulkMemberCreator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class MemberController extends Controller
 {
@@ -199,14 +200,17 @@ class MemberController extends Controller
         $requestInputs = $request->all();
         foreach($currentValues as $key=>$data){
             if( isset($requestInputs[$key]) && $data != $requestInputs[$key] ){
-                $changedData[$key]=$data;
+                $changedData[$key]=$requestInputs[$key];
             }
         }
         return $changedData;
     }
 
     private function applyChangesAsAdmin($changedFields, $member) {
-        
+        foreach($changedFields as $key=>$value){
+            switch($key){
+            }
+        }
     }
 
     private function hasValidToken($request) {
@@ -214,11 +218,48 @@ class MemberController extends Controller
     }
 
     private function applyChangesAsTokenBearer($changedFields, $member) {
-        
+        foreach($changedFields as $key=>$value){
+            switch($key){
+                case 'barnum':
+                    break;
+                case 'name':
+                    break;
+                case 'password':
+                    break;
+                case 'firm_name':
+                    break;
+            }
+        }
     }
 
     private function applyChangesAsSelf($changedFields, $member) {
-        
+        $user = $member->user;
+        $firm = $member->firm;
+        foreach($changedFields as $key=>$value){
+            switch($key){
+                case 'barnum':
+                    $member->barnum = $value;
+                    break;
+                case 'name':
+                    $user->name = $value;
+                    break;
+                case 'password':
+                    $user->password = Hash::make($value);
+                    break;
+                case 'firm_name':
+                    if($firm->firm_name != $value){
+                        //new firm needs to be selected
+                        $this->setFirmToNewValue($member, $value);
+                    }
+                    break;
+            }
+        }
+        if( $user->isDirty() ){
+            $user->save();
+        }
+        if( $member->isDirty() ){
+            $member->save();
+        }
     }
 
     private function getAuthenticatedMember() {
@@ -228,6 +269,14 @@ class MemberController extends Controller
             $member = BarMember::where('user_id','=',$user->id)->first();
         }
         return $member;
+    }
+
+    private function setFirmToNewValue(BarMember $member, string $value) {
+        $newFirm = Firm::where('firm_name','=',$value)->first();
+        if( $newFirm == null ){
+            $newFirm = Firm::factory()->create(['firm_name'=>$value]);
+        }
+        $member->firm_id = $newFirm->id;
     }
 
 }

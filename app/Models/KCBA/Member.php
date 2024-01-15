@@ -60,6 +60,7 @@ class Member extends Model
         $user = $this->user;
         $firm = $this->firm;
         return [
+            'id'=>$this->id,
             'name'=>$user->name,
             'email'=>$user->email,
             'password'=>$user->password,
