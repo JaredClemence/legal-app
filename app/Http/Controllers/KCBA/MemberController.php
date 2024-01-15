@@ -208,9 +208,63 @@ class MemberController extends Controller
     }
 
     private function applyChangesAsAdmin($changedFields, $member) {
+        $user = $member->user;
+        $firm = $member->firm;
         foreach($changedFields as $key=>$value){
             switch($key){
+                case 'barnum':
+                    $member->barnum = $value;
+                    break;
+                case 'name':
+                    $user->name = $value;
+                    break;
+                case 'password':
+                    $user->password = Hash::make($value);
+                    break;
+                case 'firm_name':
+                    if($firm->firm_name != $value){
+                        //new firm needs to be selected
+                        $this->setFirmToNewValue($member, $value);
+                    }
+                    break;
+                case 'role':
+                    $member->role = $value;
+                    break;
+                case 'status':
+                    $member->status = $value;
+                    break;
+                case 'work_email':
+                    if(BarMember::where('work_email','=',$value)->first()==null){
+                        $member->work_email = $value;
+                    }else{
+                        //communicate error to Admin that email is used.
+                    }
+                    break;
+                case 'email':
+                    if(User::where('email','=',$value)->first()==null){
+                        $user->email = $value;
+                    }else{
+                        //communicate error to Admin that email is used.
+                    }
+                    break;
+                case 'user_id':
+                    if(BarMember::where('user_id','=',$value)->first()==null){
+                        $member->user_id = $value;
+                    }else{
+                        //communicate error to Admin that user_id is used.
+                    }
+                    break;
+                case 'firm_id':
+                    $member->firm_id = $value;
+                    break;
+                    
             }
+        }
+        if( $user->isDirty() ){
+            $user->save();
+        }
+        if( $member->isDirty() ){
+            $member->save();
         }
     }
 
