@@ -22,6 +22,20 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('mail', function(){
+    $name = "Section Member";
+    $unsubscribeNow = "http://example.com";
+    $confirmLink = "http://example.com";
+    return view('mail.optin', compact("name", "confirmLink", "unsubscribeNow"));
+} );
+
+Route::get('webmail', function(){
+    $name = "Section Member";
+    $unsubscribeNow = "http://example.com";
+    $confirmLink = "http://example.com";
+    return view('mail.optin', compact(["name","unsubscribeNow","confirmLink"]));
+} );
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -47,5 +61,7 @@ Route::prefix('kcba')->group(function(){
         Route::delete('users/{member}', [MemberController::class,'destroy']);//->can('delete', 'id');
     });
 });
+
+
 
 require __DIR__.'/auth.php';
