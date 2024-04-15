@@ -59,6 +59,8 @@ Route::prefix('kcba')->group(function(){
         Route::get('users/{member}',[MemberController::class,'edit'])->name('kcba.member.edit');//->can('update', 'id');
         Route::post('users/{member}',[MemberController::class,'update']);//->can('update', 'id');
         Route::delete('users/{member}', [MemberController::class,'destroy']);//->can('delete', 'id');
+        Route::get('users/{member}/optin',[MemberController::class,'optin'])->name('kcba.member.optin');
+        Route::get('users/{member}/optout',[MemberController::class,'optout'])->name('kcba.member.unsubscribe');
     });
 });
 

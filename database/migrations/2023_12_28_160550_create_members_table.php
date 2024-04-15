@@ -20,6 +20,8 @@ return new class extends Migration
             $table->char('barnum',10)->nullable();
             $table->char('status',10)->default("PENDING");
             $table->char('role',10)->default("USER");
+            $table->dateTime('optin')->nullable();
+            $table->dateTime('unsubscribe')->nullable();
         });
     }
 

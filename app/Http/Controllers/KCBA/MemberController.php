@@ -13,6 +13,7 @@ use App\Http\Controllers\KCBA\Components\BulkMemberCreator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\KCBA\TimedSecurityToken;
+use Carbon\Carbon;
 
 class MemberController extends Controller
 {
@@ -115,6 +116,27 @@ class MemberController extends Controller
         }
         return $this->edit($request, $member);
     }
+    
+    public function optin(Request $request, BarMember $member){
+        if($member->optin == null){
+            $member->optin = Carbon::now();
+            $member->save();
+        }
+        $params = ['member'=>$member];
+        if($request->input('token')){
+            $params['token'] = $request->input('token');
+        }
+        $url = route('kcba.member.edit', $params);
+        return redirect( $url );
+    }
+    
+    public function optout(Request $request, BarMember $member){
+        if( $member->unsubscribe == null ){
+            $member->unsubscribe = Carbon::now();
+            $member->save();
+        }
+        return view('kcba.members.unsubscribe');
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -173,7 +195,9 @@ class MemberController extends Controller
             if( $member->user_id !== $user->id ) $member->user_id = $user->id;
             if( $member->firm_id !== $firm?->id ) $member->firm_id = $firm?->id;
             if( $member->barnum !== $request->input('barnum','') ) $member->barnum = $request->input('barnum','');
-            if( $member->work_email !== $request->input('work_email','') ) $member->work_email = $request->input('work_email','');
+            if( $member->work_email !== $request->input('work_email','') ){
+                $member->work_email = $request->input('work_email','');
+            }
             if( $member->isDirty() ){
                 $member->save();
                 $member->refresh();
