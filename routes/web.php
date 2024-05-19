@@ -6,6 +6,8 @@ use App\Http\Controllers\KCBA\MemberController;
 use App\Http\Middleware\KCBA\IsBarMember;
 use App\Models\KCBA\Member as BarMember;
 use App\Http\Middleware\KCBA\TimedTokenValid;
+use App\Models\KCBA\Event;
+use App\Http\Middleware\KCBA\AdminOnly;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +63,34 @@ Route::prefix('kcba')->group(function(){
         Route::delete('users/{member}', [MemberController::class,'destroy']);//->can('delete', 'id');
         Route::get('users/{member}/optin',[MemberController::class,'optin'])->name('kcba.member.optin');
         Route::get('users/{member}/optout',[MemberController::class,'optout'])->name('kcba.member.unsubscribe');
+    });
+    
+    Route::prefix('events')->group(function(){
+        Route::middleware([AdminOnly::class])->group( function(){
+            Route::get('create',function(){
+                return "create";
+            })->name('kcba.events.create');
+            Route::post('create',function(){
+                return "create";
+            });
+        });
+        Route::prefix('{event}')->group( function(){
+            Route::middleware([AdminOnly::class])->group( function(){
+                Route::get('edit',function(){
+                    return "edit";
+                })->name('kcba.events.edit');
+                Route::post('edit',function(){
+                    return "edit";
+                });
+            });
+            Route::get('',function(Event $event){
+                return "display event";
+            })->name('kcba.events.show');
+        } );
+        Route::get('', function(){
+            return "list";
+        });
+        
     });
 });
 

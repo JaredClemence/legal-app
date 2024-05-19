@@ -16,8 +16,14 @@ class EventFactory extends Factory
      */
     public function definition(): array
     {
+        $title=$this->faker->sentence;
+        $presenter=$this->faker->name;
+        $startDate= $this->faker->dateTimeBetween('now','+30 years');
         return [
-            //
+            'title'=>$title,
+            'presenter_desc'=>$presenter,
+            'start'=>$startDate,
+            'duration'=>60,
         ];
     }
 }

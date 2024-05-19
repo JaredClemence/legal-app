@@ -24,6 +24,14 @@ class MemberSeeder extends Seeder
                         "barnum"=>"343496",
                         "role"=>"ADMIN"
                     ]);
+            Member::factory()->create(
+                    [
+                        'id'=>User::where("email","=","jared.clemence@gmail.com")->get()->first()?->id,
+                        'work_email'=>"jclemence@ch-law.com",
+                        'firm_id'=>Firm::where("firm_name","=","Coleman & Horowitt")->get()->first()?->id,
+                        "barnum"=>"343496",
+                        "role"=>"USER"
+                    ]);
         }catch(\Exception $e){
             
         }

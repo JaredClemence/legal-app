@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('events', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->dateTime('start')->unique();
+            $table->string('title');
+            $table->string('presenter_desc');
+            $table->integer('duration')->default(60);
         });
     }
 
